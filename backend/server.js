@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const OpenAI = require('openai');
 const SecurityManager = require('./security');
+const healthRouter = require('./health');
 
 // Load environment variables
 dotenv.config();
@@ -91,6 +92,9 @@ const sessions = new Map();
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'ChatKit Backend is running' });
 });
+
+// Health check for Docker
+app.use('/api', healthRouter);
 
 // Create a new chat session
 app.post('/api/create-session', async (req, res) => {

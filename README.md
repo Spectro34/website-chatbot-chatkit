@@ -4,6 +4,33 @@ A complete, production-ready AI chatbot solution that can be easily integrated i
 
 ## 🚀 Quick Start
 
+### Option 1: Docker Deployment (Recommended)
+```bash
+git clone https://github.com/yourusername/websitechatbot.git
+cd websitechatbot
+cp env.example .env
+# Edit .env with your OpenAI API key
+
+# Start with Docker
+npm run docker-up
+```
+
+### Option 2: Local Development
+```bash
+git clone https://github.com/yourusername/websitechatbot.git
+cd websitechatbot
+npm run setup
+
+# Configure environment
+cp backend/.env.example backend/.env
+# Edit backend/.env with your OpenAI API key
+
+# Start the application
+npm start
+# In another terminal: cd sample-website && python3 -m http.server 8080
+```
+
+### Option 3: One-Line Integration
 **Add AI chat to any website in 3 steps:**
 
 1. **Deploy Backend**: `cd backend && npm install && vercel --prod`
@@ -16,17 +43,25 @@ A complete, production-ready AI chatbot solution that can be easily integrated i
 websitechatbot/
 ├── backend/                         # Node.js API server
 │   ├── server.js                   # Main backend application
-│   ├── package.json                # Dependencies
-│   └── .env                        # Environment configuration
+│   ├── security.js                 # Security management
+│   ├── health.js                   # Health check endpoint
+│   ├── Dockerfile                  # Backend container
+│   └── package.json                # Dependencies
 ├── sample-website/                  # Demo website
-│   └── index.html                  # Working chatbot demo
+│   ├── index.html                  # Working chatbot demo
+│   └── styles.css                  # Demo styling
+├── examples/                        # Integration examples
+│   ├── basic-integration.html      # One-line integration
+│   └── advanced-integration.html   # Advanced customization
 ├── chatkit-app/                     # Official ChatKit React app
 │   ├── app/                        # React components
 │   ├── components/                 # ChatKit components
 │   └── package.json               # Dependencies
-├── openai/                         # Your existing OpenAI setup
-│   ├── example.py
-│   └── requirements.txt
+├── chatkit-widget.js               # Universal widget script
+├── docker-compose.yml              # Container orchestration
+├── nginx.conf                      # Frontend server config
+├── env.example                     # Environment template
+├── containerized-deployment-guide.md # Docker deployment guide
 ├── GETTING_STARTED_KIT.md          # Quick integration guide
 ├── ARCHITECTURE_DOCUMENTATION.md   # Technical architecture
 └── README.md                       # This file
@@ -38,22 +73,30 @@ websitechatbot/
 - 🔌 **Pluggable**: Add to any website with one line
 - 📱 **Responsive**: Works on all devices
 - 🎨 **Customizable**: Match your brand
-- 🔒 **Secure**: API key protection
+- 🔒 **Secure**: API key protection, rate limiting, CORS
 - ⚡ **Real-time**: Instant responses
 - 💾 **Session Management**: Conversation context
 - 🌐 **Universal**: Works with any website
+- 🐳 **Containerized**: Docker deployment ready
+- 🚀 **Production-Ready**: Health checks, monitoring, scaling
 
 ## 🎯 Live Demo
 
-**Currently Running:**
+**Docker Deployment:**
 - **Website**: http://localhost:8080
 - **Backend API**: http://localhost:3001
+- **Widget Script**: http://localhost:8080/chatkit-widget.js
+
+**Integration Examples:**
+- **Basic Integration**: http://localhost:8080/examples/basic-integration.html
+- **Advanced Integration**: http://localhost:8080/examples/advanced-integration.html
 - **Status**: ✅ Fully functional with your OpenAI API key
 
 ## 📚 Documentation
 
 ### For Quick Integration
 - **[Getting Started Kit](GETTING_STARTED_KIT.md)** - 3-step integration guide
+- **[Containerized Deployment Guide](containerized-deployment-guide.md)** - Docker deployment and scaling
 - **One-line integration** for any website
 - **Customization options** and examples
 

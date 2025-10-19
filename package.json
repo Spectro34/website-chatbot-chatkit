@@ -10,7 +10,13 @@
     "test": "cd backend && npm test",
     "build": "cd chatkit-app && npm run build",
     "setup": "npm run install-all && echo 'Setup complete! Configure your .env files and run npm start'",
-    "security-check": "cd backend && node -e \"console.log('Security features: API key validation, rate limiting, CORS, input sanitization, session management')\""
+    "security-check": "cd backend && node -e \"console.log('Security features: API key validation, rate limiting, CORS, input sanitization, session management')\"",
+    "docker-build": "docker compose build",
+    "docker-up": "docker compose up -d",
+    "docker-down": "docker compose down",
+    "docker-logs": "docker compose logs -f",
+    "docker-restart": "docker compose restart",
+    "docker-dev": "docker compose up --build"
   },
   "keywords": [
     "chatbot",

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced ChatKit Integration Example</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        .demo-section h3 {
+            color: #495057;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #229954;
+        }
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Advanced ChatKit Integration Demo</h1>
+        
+        <div class="demo-section">
+            <h3>🔧 Manual Initialization</h3>
+            <p>Initialize ChatKit programmatically with full control over configuration:</p>
+            <div class="code-block">
+// Initialize ChatKit with custom settings
+ChatKit.init({
+    backendUrl: 'http://localhost:3001',
+    widgetTitle: 'Custom Assistant',
+    welcomeMessage: 'Welcome! How can I assist you?',
+    primaryColor: '#e74c3c',
+    position: 'bottom-left',
+    theme: 'dark'
+});
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="initCustomChat()">Initialize Custom Chat</button>
+                <button class="btn btn-success" onclick="openChat()">Open Chat</button>
+                <button class="btn btn-warning" onclick="closeChat()">Close Chat</button>
+                <button class="btn btn-danger" onclick="destroyChat()">Destroy Chat</button>
+            </div>
+            <div id="status"></div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🎨 Theme Customization</h3>
+            <p>Try different themes and color schemes:</p>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="setTheme('light', '#3498db')">Light Blue</button>
+                <button class="btn btn-success" onclick="setTheme('dark', '#27ae60')">Dark Green</button>
+                <button class="btn btn-warning" onclick="setTheme('light', '#f39c12')">Light Orange</button>
+                <button class="btn btn-danger" onclick="setTheme('dark', '#e74c3c')">Dark Red</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>📍 Position Control</h3>
+            <p>Change widget position dynamically:</p>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="setPosition('bottom-right')">Bottom Right</button>
+                <button class="btn btn-primary" onclick="setPosition('bottom-left')">Bottom Left</button>
+                <button class="btn btn-primary" onclick="setPosition('top-right')">Top Right</button>
+                <button class="btn btn-primary" onclick="setPosition('top-left')">Top Left</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>📱 API Methods</h3>
+            <p>Control the widget programmatically:</p>
+            <div class="code-block">
+// Available methods:
+ChatKit.init(config)     // Initialize with configuration
+ChatKit.open()           // Open the chat panel
+ChatKit.close()          // Close the chat panel
+ChatKit.destroy()        // Remove widget completely
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🔗 Integration Examples</h3>
+            <p>See how to integrate with different frameworks:</p>
+            <div class="code-block">
+// React
+useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://yourdomain.com/chatkit-widget.js';
+    script.onload = () => ChatKit.init(config);
+    document.head.appendChild(script);
+}, []);
+
+// Vue
+mounted() {
+    window.ChatKit.init(config);
+}
+
+// Angular
+ngOnInit() {
+    window.ChatKit.init(config);
+}
+            </div>
+        </div>
+    </div>
+
+    <!-- Load ChatKit Widget Script -->
+    <script src="http://localhost:8080/chatkit-widget.js"></script>
+    
+    <script>
+        let chatInstance = null;
+        
+        function updateStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function initCustomChat() {
+            try {
+                chatInstance = ChatKit.init({
+                    backendUrl: 'http://localhost:3001',
+                    widgetTitle: 'Custom Assistant',
+                    welcomeMessage: 'Welcome! I\'m your custom AI assistant. How can I help you today?',
+                    primaryColor: '#e74c3c',
+                    position: 'bottom-left',
+                    placeholderText: 'Ask me anything...'
+                });
+                updateStatus('✅ Custom chat initialized successfully!');
+            } catch (error) {
+                updateStatus('❌ Error initializing chat: ' + error.message, 'error');
+            }
+        }
+        
+        function openChat() {
+            if (chatInstance) {
+                chatInstance.open();
+                updateStatus('✅ Chat opened!');
+            } else {
+                updateStatus('❌ Chat not initialized. Please initialize first.', 'error');
+            }
+        }
+        
+        function closeChat() {
+            if (chatInstance) {
+                chatInstance.close();
+                updateStatus('✅ Chat closed!');
+            } else {
+                updateStatus('❌ Chat not initialized.', 'error');
+            }
+        }
+        
+        function destroyChat() {
+            if (chatInstance) {
+                chatInstance.destroy();
+                chatInstance = null;
+                updateStatus('✅ Chat destroyed!');
+            } else {
+                updateStatus('❌ Chat not initialized.', 'error');
+            }
+        }
+        
+        function setTheme(theme, color) {
+            if (chatInstance) {
+                chatInstance.updateConfig({
+                    theme: theme,
+                    primaryColor: color
+                });
+                updateStatus(`✅ Theme changed to ${theme} with color ${color}!`);
+            } else {
+                updateStatus('❌ Chat not initialized. Please initialize first.', 'error');
+            }
+        }
+        
+        function setPosition(position) {
+            if (chatInstance) {
+                chatInstance.updateConfig({
+                    position: position
+                });
+                updateStatus(`✅ Position changed to ${position}!`);
+            } else {
+                updateStatus('❌ Chat not initialized. Please initialize first.', 'error');
+            }
+        }
+        
+        // Auto-initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('🚀 Page loaded! Click "Initialize Custom Chat" to start.');
+        });
+    </script>
+</body>
+</html>

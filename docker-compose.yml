@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  chatkit-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chatkit-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8080,http://localhost:3000}
+      - MAX_REQUESTS_PER_MINUTE=${MAX_REQUESTS_PER_MINUTE:-60}
+      - MAX_REQUESTS_PER_HOUR=${MAX_REQUESTS_PER_HOUR:-1000}
+      - SESSION_MAX_AGE_HOURS=${SESSION_MAX_AGE_HOURS:-24}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - chatkit-network
+
+  chatkit-frontend:
+    image: nginx:alpine
+    container_name: chatkit-frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./sample-website:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - chatkit-backend
+    restart: unless-stopped
+    networks:
+      - chatkit-network
+
+networks:
+  chatkit-network:
+    driver: bridge

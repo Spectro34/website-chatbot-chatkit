@@ -1,462 +1,522 @@
-# ChatKit Architecture Documentation
+# 🏗️ ChatKit Architecture Documentation
 
-## System Overview
+Comprehensive technical documentation for the ChatKit containerized AI chatbot system.
 
-The ChatKit integration consists of three main components working together to provide AI-powered chat functionality that can be embedded into any website.
+## 📋 Table of Contents
 
+- [System Overview](#system-overview)
+- [Container Architecture](#container-architecture)
+- [Component Breakdown](#component-breakdown)
+- [Data Flow](#data-flow)
+- [Security Architecture](#security-architecture)
+- [Deployment Architecture](#deployment-architecture)
+- [Scalability & Performance](#scalability--performance)
+- [Monitoring & Logging](#monitoring--logging)
+
+## 🎯 System Overview
+
+ChatKit is a production-ready, containerized AI chatbot system designed for easy integration into any website. It features a microservices architecture with three main components:
+
+- **🧠 Ollama Container**: Local LLM inference engine
+- **🌐 Website Container**: Frontend with ChatKit widget
+- **🤖 ChatBot Container**: Backend API with AI integration
+
+### Key Features
+- ✅ **Containerized Deployment**: Docker-based microservices
+- ✅ **Local LLM Support**: Ollama integration with OpenAI fallback
+- ✅ **Universal Integration**: Works with any website
+- ✅ **Production Ready**: Security, monitoring, and scalability
+- ✅ **Easy Customization**: Flexible configuration and theming
+
+## 🐳 Container Architecture
+
+### High-Level Architecture
 ```
-┌─────────────────┐    HTTP/HTTPS     ┌─────────────────┐    OpenAI API     ┌─────────────────┐
-│   Frontend      │ ────────────────► │   Backend API   │ ────────────────► │   OpenAI GPT    │
-│   Website       │                   │   (Node.js)     │                   │   (GPT-3.5)     │
-└─────────────────┘                   └─────────────────┘                   └─────────────────┘
-        │                                      │
-        │                                      │
-        ▼                                      ▼
-┌─────────────────┐                   ┌─────────────────┐
-│   Chat Widget   │                   │  Session Store  │
-│   (JavaScript)  │                   │  (In-Memory)    │
-└─────────────────┘                   └─────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        Docker Network                          │
+│                    (websitechatbot_chatbot-network)            │
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
+│  │   Website       │    │   ChatBot       │    │   Ollama    │ │
+│  │   Container     │◄──►│   Container     │◄──►│   Container │ │
+│  │                 │    │                 │    │             │ │
+│  │ • Nginx         │    │ • Node.js API   │    │ • LLM Engine│ │
+│  │ • Static Files  │    │ • Session Mgmt  │    │ • llama2    │ │
+│  │ • ChatKit Widget│    │ • Security      │    │ • API Server│ │
+│  │ • Port 8080     │    │ • Port 3001     │    │ • Port 11434│ │
+│  └─────────────────┘    └─────────────────┘    └─────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Component Architecture
+### Container Details
 
-### 1. Frontend Chat Widget
+#### 1. Website Container (`sample-website-ollama`)
+```yaml
+Image: websitechatbot-sample-website
+Base: nginx:alpine
+Port: 8080
+Purpose: Frontend and ChatKit widget serving
+```
 
-**Technology**: Vanilla JavaScript, HTML5, CSS3  
-**Purpose**: User interface for chat interactions  
-**Location**: `sample-website/index.html`
+**Components:**
+- **Nginx**: Web server and reverse proxy
+- **Static Files**: HTML, CSS, JavaScript
+- **ChatKit Widget**: Universal JavaScript widget
+- **Integration Examples**: Demo pages
 
-#### Key Features:
-- **Self-contained**: No external dependencies
-- **Responsive**: Works on desktop, tablet, mobile
-- **Pluggable**: Can be added to any website
-- **Customizable**: Easy to style and modify
+#### 2. ChatBot Container (`chatbot-backend-ollama`)
+```yaml
+Image: websitechatbot-chatbot-backend
+Base: node:18-alpine
+Port: 3001
+Purpose: Backend API and AI integration
+```
 
-#### Core Functions:
+**Components:**
+- **Express.js**: Web framework
+- **Session Management**: User session handling
+- **Security Manager**: Authentication and protection
+- **Ollama Integration**: Local LLM communication
+- **OpenAI Fallback**: Cloud AI backup
+
+#### 3. Ollama Container (`ollama-server`)
+```yaml
+Image: ollama/ollama:latest
+Port: 11434
+Purpose: Local LLM inference
+```
+
+**Components:**
+- **Ollama Server**: LLM serving engine
+- **Model Storage**: Local model files
+- **API Server**: HTTP API for inference
+- **Model**: llama2:latest (configurable)
+
+## 🔧 Component Breakdown
+
+### Frontend Components
+
+#### ChatKit Widget (`chatkit-widget.js`)
 ```javascript
-// Session management
-async function createSession()
-
-// UI controls
-function toggleChat()
-function openChat()
-function closeChat()
-
-// Message handling
-function addMessage(sender, message, type)
-async function sendMessage()
-
-// Event handling
-function handleKeyPress(event)
+// Core widget functionality
+class ChatKit {
+  constructor(config) {
+    this.config = config;
+    this.sessionId = null;
+    this.isOpen = false;
+  }
+  
+  init() { /* Initialize widget */ }
+  open() { /* Open chat interface */ }
+  close() { /* Close chat interface */ }
+  sendMessage(message) { /* Send user message */ }
+  receiveMessage(message) { /* Display AI response */ }
+}
 ```
 
-#### HTML Structure:
-```html
-<!-- Chat Toggle Button -->
-<button class="chat-toggle" onclick="toggleChat()">💬</button>
+**Features:**
+- Universal JavaScript widget
+- Responsive design
+- Customizable themes
+- Event callbacks
+- Multi-language support
 
-<!-- Chat Panel -->
-<div class="chat-panel" id="chatPanel">
-    <div class="chat-header">
-        <h3>AI Assistant</h3>
-        <button onclick="closeChat()">×</button>
-    </div>
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-input-area">
-        <input type="text" id="chatInput" placeholder="Type your message...">
-        <button onclick="sendMessage()">Send</button>
-    </div>
-</div>
+#### Sample Website (`sample-website/`)
+```
+sample-website/
+├── index.html              # Main demo page
+├── styles.css              # Styling
+├── nginx.conf              # Nginx configuration
+├── Dockerfile              # Container build
+└── examples/               # Integration examples
+    └── any-website-integration.html
 ```
 
-#### CSS Architecture:
-```css
-/* Base styles */
-.chat-toggle { /* Floating action button */ }
-.chat-panel { /* Chat container */ }
-.chat-header { /* Header with title and close button */ }
-.chat-messages { /* Scrollable message area */ }
-.chat-input-area { /* Input controls */ }
+### Backend Components
 
-/* Message styles */
-.message { /* Base message styling */ }
-.message.user { /* User message styling */ }
-.message.bot { /* Bot message styling */ }
-
-/* Responsive design */
-@media (max-width: 480px) { /* Mobile adaptations */ }
-```
-
-### 2. Backend API Server
-
-**Technology**: Node.js, Express.js, OpenAI JavaScript SDK  
-**Purpose**: Handle chat requests and manage AI interactions  
-**Location**: `backend/server.js`
-
-#### Architecture:
+#### API Server (`backend/server-ollama.js`)
 ```javascript
+// Main server file
 const express = require('express');
-const cors = require('cors');
-const OpenAI = require('openai');
+const SecurityManager = require('./security');
+const app = express();
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Middleware
+app.use(security.middleware());
+app.use(cors(corsOptions));
+app.use(rateLimit());
 
-// Session storage (in production: Redis/Database)
-const sessions = new Map();
+// Routes
+app.post('/api/create-session', createSession);
+app.post('/api/chat', handleChat);
+app.get('/api/session/:id/messages', getMessages);
 ```
 
-#### API Endpoints:
+**Key Features:**
+- RESTful API design
+- Session management
+- Rate limiting
+- Input sanitization
+- Error handling
 
-##### Health Check
+#### Security Manager (`backend/security.js`)
 ```javascript
+class SecurityManager {
+  initializeApiKey(key) { /* Validate API key */ }
+  checkRateLimit(clientId) { /* Rate limiting */ }
+  sanitizeInput(input) { /* Input sanitization */ }
+  generateSecureSessionId() { /* Session ID generation */ }
+  getSecurityHeaders() { /* Security headers */ }
+}
+```
+
+**Security Features:**
+- API key validation
+- Rate limiting (per IP, per session)
+- Input sanitization (XSS prevention)
+- CORS protection
+- Security headers
+- Session security
+
+#### Health Check (`backend/health.js`)
+```javascript
+// Health check endpoint
 app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'ChatKit Backend is running' });
+  res.json({
+    status: 'OK',
+    timestamp: new Date(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage()
+  });
 });
 ```
 
-##### Create Session
+### Ollama Integration
+
+#### Model Configuration
+```bash
+# Environment variables
+OLLAMA_BASE_URL=http://ollama-server:11434
+OLLAMA_MODEL=llama2:latest
+OLLAMA_API_KEY=ollama
+```
+
+#### API Communication
 ```javascript
-app.post('/api/create-session', async (req, res) => {
-    const sessionId = generateSessionId();
-    const session = {
-        id: sessionId,
-        createdAt: new Date(),
-        messages: []
-    };
-    sessions.set(sessionId, session);
-    res.json({ sessionId, message: 'Session created successfully' });
+// Ollama API call
+const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    model: OLLAMA_MODEL,
+    messages: conversationMessages,
+    stream: false,
+    options: { temperature: 0.7 }
+  })
 });
 ```
 
-##### Chat Endpoint (Core AI Integration)
-```javascript
-app.post('/api/chat', async (req, res) => {
-    const { sessionId, message } = req.body;
-    
-    // Get session and add user message
-    let session = sessions.get(sessionId);
-    session.messages.push({
-        role: 'user',
-        content: message,
-        timestamp: new Date()
-    });
-    
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-            {
-                role: "system",
-                content: "You are a helpful AI assistant for a sample website..."
-            },
-            ...session.messages.slice(-10) // Last 10 messages for context
-        ],
-        max_tokens: 500,
-        temperature: 0.7
-    });
-    
-    const aiResponse = completion.choices[0].message.content;
-    
-    // Store AI response and return
-    session.messages.push({
-        role: 'assistant',
-        content: aiResponse,
-        timestamp: new Date()
-    });
-    
-    res.json({ sessionId, response: aiResponse, timestamp: new Date() });
-});
+## 🔄 Data Flow
+
+### 1. User Interaction Flow
+```
+User Input → ChatKit Widget → Backend API → Ollama/OpenAI → Response → Widget
 ```
 
-#### Session Management:
+### 2. Session Management Flow
+```
+1. User opens chat
+2. Widget calls /api/create-session
+3. Backend generates secure session ID
+4. Session stored in memory with metadata
+5. All subsequent messages use session ID
+6. Session expires after 24 hours
+```
+
+### 3. Message Processing Flow
+```
+1. User types message
+2. Widget validates input
+3. Message sent to /api/chat with session ID
+4. Backend validates session and sanitizes input
+5. Message added to conversation history
+6. Backend calls Ollama API
+7. If Ollama fails, fallback to OpenAI
+8. Response sanitized and returned
+9. Widget displays response
+10. Message added to UI history
+```
+
+### 4. Error Handling Flow
+```
+Error Occurs → Log Error → Check Error Type → 
+├─ Network Error → Retry with backoff
+├─ API Error → Return user-friendly message
+├─ Security Error → Block request
+└─ System Error → Fallback to OpenAI
+```
+
+## 🔒 Security Architecture
+
+### Security Layers
+
+#### 1. Network Security
+- **Docker Network**: Isolated container communication
+- **CORS**: Cross-origin request protection
+- **Rate Limiting**: Request throttling per IP/session
+- **Input Validation**: Request sanitization
+
+#### 2. Application Security
+- **API Key Protection**: Secure key management
+- **Session Security**: Secure session handling
+- **Input Sanitization**: XSS prevention
+- **Output Encoding**: Response sanitization
+
+#### 3. Container Security
+- **Non-root User**: Containers run as non-root
+- **Minimal Images**: Alpine Linux base images
+- **Security Headers**: HTTP security headers
+- **Resource Limits**: Memory and CPU limits
+
+### Security Headers
 ```javascript
-// Session structure
-const session = {
-    id: 'session_abc123_1234567890',
-    createdAt: new Date(),
-    messages: [
-        {
-            role: 'user',
-            content: 'Hello',
-            timestamp: new Date()
-        },
-        {
-            role: 'assistant',
-            content: 'Hi! How can I help you?',
-            timestamp: new Date()
-        }
-    ]
+const securityHeaders = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Strict-Transport-Security': 'max-age=31536000',
+  'Content-Security-Policy': "default-src 'self'",
+  'Referrer-Policy': 'strict-origin-when-cross-origin'
 };
 ```
 
-### 3. OpenAI Integration
+## 🚀 Deployment Architecture
 
-**Technology**: OpenAI JavaScript SDK  
-**Purpose**: Provide AI-powered responses  
-**Model**: GPT-3.5-turbo
+### Docker Compose Configuration
+```yaml
+# docker-compose.microservices-ollama.yml
+services:
+  chatbot-backend:
+    build: ./backend
+    command: ["node", "server-ollama.js"]
+    environment:
+      - OLLAMA_BASE_URL=http://ollama-server:11434
+      - OLLAMA_MODEL=llama2:latest
+    ports: ["3001:3001"]
+    networks: [chatbot-network]
+    
+  sample-website:
+    build: ./sample-website
+    ports: ["8080:80"]
+    networks: [chatbot-network]
+    depends_on: [chatbot-backend]
 
-#### Configuration:
-```javascript
-const completion = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",        // AI model
-    max_tokens: 500,               // Response length limit
-    temperature: 0.7,              // Creativity level (0-1)
-    messages: [...]                // Conversation context
-});
+networks:
+  chatbot-network:
+    external: true
+    name: websitechatbot_chatbot-network
 ```
 
-#### System Prompt:
-```javascript
-{
-    role: "system",
-    content: "You are a helpful AI assistant for a sample website. Provide friendly, helpful responses to user questions about services, products, or general information."
-}
-```
+### Deployment Options
 
-#### Context Management:
-- **Message History**: Last 10 messages maintained for context
-- **Role-based Messages**: User messages as 'user', AI responses as 'assistant'
-- **Timestamp Tracking**: Each message includes creation timestamp
-- **Session Persistence**: Conversations persist until session deletion
-
-## Data Flow
-
-### 1. Initialization Flow
-```
-Page Load → Create Session → Backend API → Session ID → Frontend Ready
-```
-
-### 2. Message Flow
-```
-User Types Message
-        ↓
-Frontend: addMessage('You', message, 'user')
-        ↓
-Frontend: fetch('/api/chat', { sessionId, message })
-        ↓
-Backend: Add user message to session
-        ↓
-Backend: Call OpenAI API with context
-        ↓
-OpenAI: Generate response using GPT-3.5
-        ↓
-Backend: Store AI response in session
-        ↓
-Backend: Return response to frontend
-        ↓
-Frontend: addMessage('AI Assistant', response, 'bot')
-```
-
-### 3. Error Handling Flow
-```
-Error Occurs → Catch Block → Log Error → Return Error Message → Display to User
-```
-
-## Security Architecture
-
-### 1. API Key Protection
-```javascript
-// Environment variable (never in code)
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY, // Secure storage
-});
-```
-
-### 2. CORS Configuration
-```javascript
-app.use(cors({
-    origin: ['https://your-website.com'],
-    credentials: true
-}));
-```
-
-### 3. Input Validation
-```javascript
-// Basic validation
-if (!message || message.length > 1000) {
-    return res.status(400).json({ error: 'Invalid message' });
-}
-```
-
-### 4. Session Security
-- **Unique Session IDs**: Randomly generated identifiers
-- **No Sensitive Data**: Only conversation history stored
-- **Automatic Cleanup**: Sessions can be deleted
-
-## Performance Architecture
-
-### 1. Frontend Optimizations
-- **Lazy Loading**: Chat widget loads only when needed
-- **Message Limiting**: UI shows only recent messages
-- **Efficient DOM Updates**: Minimal re-rendering
-- **CSS Animations**: Smooth transitions
-
-### 2. Backend Optimizations
-- **Context Window**: Only last 10 messages sent to OpenAI
-- **Connection Pooling**: Express handles automatically
-- **Memory Management**: Sessions stored in Map (production: Redis)
-
-### 3. API Optimizations
-- **Token Limits**: `max_tokens: 500` prevents long responses
-- **Temperature Control**: `temperature: 0.7` balances creativity/consistency
-- **Model Selection**: GPT-3.5-turbo for cost-effectiveness
-
-## Scalability Architecture
-
-### 1. Horizontal Scaling
-```
-Load Balancer → Multiple Backend Instances → Shared Session Store (Redis)
-```
-
-### 2. Database Integration
-```javascript
-// Production session storage
-const redis = require('redis');
-const client = redis.createClient();
-
-// Store session
-await client.setex(`session:${sessionId}`, 3600, JSON.stringify(session));
-
-// Retrieve session
-const sessionData = await client.get(`session:${sessionId}`);
-```
-
-### 3. CDN Integration
-```html
-<!-- Static assets served from CDN -->
-<script src="https://cdn.your-domain.com/chatkit-widget.js"></script>
-```
-
-## Deployment Architecture
-
-### 1. Development Environment
-```
-Local Machine → Backend (localhost:3001) → OpenAI API
-             → Frontend (localhost:8080) → Backend API
-```
-
-### 2. Production Environment
-```
-User Browser → CDN → Frontend (Static Hosting)
-            → Load Balancer → Backend (Cloud)
-            → Database (Redis/PostgreSQL)
-            → OpenAI API
-```
-
-### 3. Environment Configuration
+#### 1. Local Development
 ```bash
-# Development
-NODE_ENV=development
-OPENAI_API_KEY=sk-proj-...
-PORT=3001
+./deploy.sh ollama
+```
+- Single container with hot reload
+- Optional Ollama support
+- Development-friendly
 
-# Production
+#### 2. Microservices (Production)
+```bash
+./deploy.sh microservices-ollama
+```
+- Three separate containers
+- Production-ready configuration
+- Scalable architecture
+
+#### 3. Cloud Deployment
+- **AWS**: ECS, EKS, or EC2
+- **Google Cloud**: GKE or Cloud Run
+- **Azure**: Container Instances or AKS
+- **DigitalOcean**: App Platform or Droplets
+
+## 📊 Scalability & Performance
+
+### Performance Metrics
+- **Response Time**: < 2s for OpenAI, < 10s for Ollama
+- **Throughput**: 100+ concurrent users
+- **Memory Usage**: < 512MB per container
+- **CPU Usage**: < 50% under normal load
+
+### Scaling Strategies
+
+#### Horizontal Scaling
+```yaml
+# Scale ChatBot backend
+docker service scale chatbot-backend=3
+
+# Load balancer configuration
+nginx:
+  upstream backend {
+    server chatbot-backend-1:3001;
+    server chatbot-backend-2:3001;
+    server chatbot-backend-3:3001;
+  }
+```
+
+#### Vertical Scaling
+```yaml
+# Resource limits
+deploy:
+  resources:
+    limits:
+      memory: 1G
+      cpus: '0.5'
+    reservations:
+      memory: 256M
+      cpus: '0.25'
+```
+
+### Caching Strategy
+- **Session Cache**: In-memory session storage
+- **Response Cache**: Redis for frequent responses
+- **Static Assets**: CDN for widget files
+- **Model Cache**: Ollama model persistence
+
+## 📈 Monitoring & Logging
+
+### Health Checks
+```yaml
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 20s
+```
+
+### Logging Strategy
+```javascript
+// Structured logging
+const logger = {
+  info: (message, meta) => console.log(JSON.stringify({
+    level: 'info',
+    message,
+    timestamp: new Date().toISOString(),
+    ...meta
+  })),
+  error: (message, meta) => console.error(JSON.stringify({
+    level: 'error',
+    message,
+    timestamp: new Date().toISOString(),
+    ...meta
+  }))
+};
+```
+
+### Metrics Collection
+- **Request Count**: Total API requests
+- **Response Time**: Average response time
+- **Error Rate**: Error percentage
+- **Memory Usage**: Container memory usage
+- **CPU Usage**: Container CPU usage
+
+### Monitoring Tools
+- **Prometheus**: Metrics collection
+- **Grafana**: Metrics visualization
+- **ELK Stack**: Log aggregation
+- **Docker Stats**: Container monitoring
+
+## 🔧 Configuration Management
+
+### Environment Variables
+```bash
+# Backend Configuration
+PORT=3001
 NODE_ENV=production
-OPENAI_API_KEY=sk-proj-...
-PORT=3001
-CORS_ORIGIN=https://your-website.com
-REDIS_URL=redis://your-redis-instance
+ALLOWED_ORIGINS=http://localhost:8080
+
+# Ollama Configuration
+OLLAMA_BASE_URL=http://ollama-server:11434
+OLLAMA_MODEL=llama2:latest
+OLLAMA_API_KEY=ollama
+
+# Security Configuration
+RATE_LIMIT_REQUESTS_PER_MINUTE=60
+RATE_LIMIT_REQUESTS_PER_HOUR=1000
+SESSION_SECRET=your-super-secret-session-key
+API_KEY_HASH_SALT=your-salt-for-api-key-hashing
+
+# OpenAI Fallback
+OPENAI_API_KEY=your-openai-api-key
 ```
 
-## Monitoring and Logging
+### Configuration Files
+- **docker-compose.yml**: Container orchestration
+- **Dockerfile**: Container build instructions
+- **nginx.conf**: Web server configuration
+- **.env**: Environment variables
+- **package.json**: Node.js dependencies
 
-### 1. Application Logs
+## 🧪 Testing Strategy
+
+### Unit Tests
 ```javascript
-console.log('ChatKit Backend: Session created:', sessionId);
-console.error('ChatKit Backend: Error:', error);
-```
-
-### 2. Health Monitoring
-```javascript
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'OK', 
-        timestamp: new Date(),
-        uptime: process.uptime()
-    });
-});
-```
-
-### 3. Error Tracking
-```javascript
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong!' });
-});
-```
-
-## Testing Architecture
-
-### 1. Unit Tests
-```javascript
-// Test session creation
-test('creates session successfully', async () => {
+// Backend API tests
+describe('Chat API', () => {
+  test('should create session', async () => {
     const response = await request(app)
-        .post('/api/create-session')
-        .expect(200);
-    
+      .post('/api/create-session')
+      .expect(200);
     expect(response.body.sessionId).toBeDefined();
+  });
 });
 ```
 
-### 2. Integration Tests
+### Integration Tests
 ```javascript
-// Test chat flow
-test('handles complete chat flow', async () => {
-    // Create session
-    const sessionResponse = await createSession();
-    
-    // Send message
-    const chatResponse = await sendMessage(sessionResponse.sessionId, 'Hello');
-    
-    expect(chatResponse.response).toBeDefined();
+// End-to-end tests
+describe('ChatKit Integration', () => {
+  test('should handle complete chat flow', async () => {
+    // Test widget initialization
+    // Test message sending
+    // Test response receiving
+  });
 });
 ```
 
-### 3. End-to-End Tests
-```javascript
-// Test frontend integration
-test('chat widget works on website', async () => {
-    await page.goto('http://localhost:8080');
-    await page.click('.chat-toggle');
-    await page.type('#chatInput', 'Hello');
-    await page.click('.send-button');
-    
-    await expect(page.locator('.message.bot')).toBeVisible();
-});
+### Load Tests
+```bash
+# Load testing with Artillery
+artillery run load-test.yml
 ```
 
-## Future Architecture Enhancements
+## 🚀 Future Enhancements
 
-### 1. Advanced Features
-- **Streaming Responses**: Real-time message streaming
-- **File Attachments**: Support for images/documents
-- **Voice Interface**: Speech-to-text and text-to-speech
-- **Multi-modal**: Image analysis and generation
+### Planned Features
+- **Multi-model Support**: Support for multiple LLM providers
+- **Advanced Analytics**: User behavior tracking
+- **A/B Testing**: Message variation testing
+- **Voice Integration**: Speech-to-text and text-to-speech
+- **File Upload**: Document and image processing
+- **Multi-language**: Real-time translation
 
-### 2. Scalability Improvements
-- **Microservices**: Split into smaller services
-- **Event-driven**: Use message queues
-- **Caching**: Redis for session and response caching
+### Architecture Improvements
+- **Service Mesh**: Istio for advanced networking
+- **Message Queue**: Redis/RabbitMQ for async processing
+- **Database**: PostgreSQL for persistent storage
+- **Caching**: Redis for response caching
 - **CDN**: Global content delivery
 
-### 3. Security Enhancements
-- **Rate Limiting**: Prevent API abuse
-- **Authentication**: User authentication system
-- **Encryption**: End-to-end message encryption
-- **Audit Logging**: Comprehensive activity tracking
+## 📚 Related Documentation
 
-## Conclusion
+- **[README.md](README.md)** - Quick start guide
+- **[CHATKIT_INTEGRATION_GUIDE.md](CHATKIT_INTEGRATION_GUIDE.md)** - Integration guide
+- **[SECURITY_GUIDE.md](SECURITY_GUIDE.md)** - Security details
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deployment guide
+- **[ollama-setup/README.md](ollama-setup/README.md)** - Ollama setup
 
-This architecture provides a robust, scalable, and maintainable foundation for AI-powered chatbot integration. The modular design allows for easy customization, deployment, and scaling while maintaining security and performance standards.
+---
 
-The system is designed to be:
-- **Modular**: Clear separation of concerns
-- **Scalable**: Easy to extend and scale
-- **Secure**: Proper API key management and input validation
-- **Maintainable**: Clean code structure and documentation
-- **Pluggable**: Easy integration into any website
+*This architecture documentation is maintained alongside the codebase and reflects the current containerized microservices implementation.*

@@ -1,208 +1,413 @@
 # 🚀 ChatKit Deployment Guide
 
-## Overview
+Complete guide for deploying ChatKit in various environments.
 
-This guide shows you how to deploy ChatKit with different configurations, including optional Ollama support.
+## 📋 Quick Reference
 
-## 🏗️ Architecture Options
+| Environment | Command | Description |
+|-------------|---------|-------------|
+| **Local Development** | `./deploy.sh ollama` | Local development with optional Ollama |
+| **Microservices** | `./deploy.sh microservices-ollama` | Production-ready containerized setup |
+| **OpenAI Only** | `./deploy.sh microservices` | Cloud-only deployment |
 
-### 1. Local Development
-- **Backend**: Node.js process
-- **Frontend**: Python HTTP server
-- **LLM**: OpenAI API (or optional Ollama)
+## 🏠 Local Development
 
-### 2. Microservices (Production)
-- **Backend**: Docker container
-- **Frontend**: Docker container (Nginx)
-- **LLM**: OpenAI API (or external Ollama)
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 18+ (for local development)
+- Git
 
-## 🚀 Quick Deployment
-
-### Option 1: Local Development
+### Quick Start
 ```bash
-# Start with OpenAI
-./deploy.sh local
+# Clone repository
+git clone https://github.com/yourusername/websitechatbot.git
+cd websitechatbot
 
-# Start with optional Ollama support
+# Start with Ollama support
 ./deploy.sh ollama
-```
 
-### Option 2: Microservices
-```bash
-# With OpenAI
+# Or start with OpenAI only
 ./deploy.sh microservices
-
-# With external Ollama
-./deploy.sh microservices-ollama
 ```
 
-## 🤖 Ollama Setup (Optional)
+### Development Features
+- ✅ Hot reload enabled
+- ✅ Debug logging
+- ✅ Optional Ollama support
+- ✅ Local file watching
 
-### Step 1: Set Up Ollama (Separate Project)
+## 🐳 Containerized Deployment
+
+### Option 1: With Containerized Ollama (Recommended)
+
+#### Step 1: Setup Ollama
 ```bash
 cd ollama-setup
-
-# Quick setup
-./setup.sh
-
-# Or manual setup
-cp env.example .env
-# Edit .env to choose your model
-docker compose up -d
-docker exec ollama-server ollama pull llama2
+./setup.sh start
+cd ..
 ```
 
-### Step 2: Deploy ChatKit
+#### Step 2: Deploy ChatKit
 ```bash
-# Local development with Ollama
-./deploy.sh ollama
-
-# Or microservices with external Ollama
 ./deploy.sh microservices-ollama
+```
+
+#### Architecture
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Website       │    │   ChatBot       │    │   Ollama        │
+│   (Port 8080)   │◄──►│   (Port 3001)   │◄──►│   (Port 11434)  │
+│   Nginx + UI    │    │   Node.js API   │    │   LLM Engine    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### Option 2: OpenAI Only
+
+```bash
+# Set OpenAI API key
+export OPENAI_API_KEY=your-api-key
+
+# Deploy with OpenAI
+./deploy.sh microservices
+```
+
+## ☁️ Cloud Deployment
+
+### AWS Deployment
+
+#### Using ECS
+```bash
+# Build and push images
+docker build -t your-account.dkr.ecr.region.amazonaws.com/chatkit-backend ./backend
+docker build -t your-account.dkr.ecr.region.amazonaws.com/chatkit-frontend ./sample-website
+
+# Push to ECR
+aws ecr get-login-password --region region | docker login --username AWS --password-stdin your-account.dkr.ecr.region.amazonaws.com
+docker push your-account.dkr.ecr.region.amazonaws.com/chatkit-backend
+docker push your-account.dkr.ecr.region.amazonaws.com/chatkit-frontend
+
+# Deploy with ECS
+aws ecs create-service --cluster your-cluster --service-name chatkit --task-definition chatkit-task
+```
+
+#### Using EKS
+```yaml
+# kubernetes-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatkit-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: chatkit-backend
+  template:
+    metadata:
+      labels:
+        app: chatkit-backend
+    spec:
+      containers:
+      - name: chatkit-backend
+        image: your-account.dkr.ecr.region.amazonaws.com/chatkit-backend
+        ports:
+        - containerPort: 3001
+        env:
+        - name: OLLAMA_BASE_URL
+          value: "http://ollama-service:11434"
+        - name: OLLAMA_MODEL
+          value: "llama2:latest"
+```
+
+### Google Cloud Platform
+
+#### Using Cloud Run
+```bash
+# Build and deploy
+gcloud builds submit --tag gcr.io/your-project/chatkit-backend ./backend
+gcloud builds submit --tag gcr.io/your-project/chatkit-frontend ./sample-website
+
+# Deploy to Cloud Run
+gcloud run deploy chatkit-backend --image gcr.io/your-project/chatkit-backend --platform managed --region us-central1 --allow-unauthenticated
+gcloud run deploy chatkit-frontend --image gcr.io/your-project/chatkit-frontend --platform managed --region us-central1 --allow-unauthenticated
+```
+
+#### Using GKE
+```bash
+# Create cluster
+gcloud container clusters create chatkit-cluster --num-nodes=3 --zone=us-central1-a
+
+# Deploy application
+kubectl apply -f kubernetes-deployment.yaml
+```
+
+### Azure Deployment
+
+#### Using Container Instances
+```bash
+# Deploy to Azure Container Instances
+az container create \
+  --resource-group myResourceGroup \
+  --name chatkit-backend \
+  --image your-registry.azurecr.io/chatkit-backend \
+  --dns-name-label chatkit-backend \
+  --ports 3001
+```
+
+#### Using AKS
+```bash
+# Create AKS cluster
+az aks create --resource-group myResourceGroup --name chatkit-cluster --node-count 3 --enable-addons monitoring
+
+# Deploy application
+kubectl apply -f kubernetes-deployment.yaml
 ```
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-#### For OpenAI (Default)
+#### Backend Configuration
 ```bash
-# backend/.env
-OPENAI_API_KEY=sk-your-key-here
+# Server Configuration
+PORT=3001
+NODE_ENV=production
+
+# CORS Configuration
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# Rate Limiting
+RATE_LIMIT_REQUESTS_PER_MINUTE=60
+RATE_LIMIT_REQUESTS_PER_HOUR=1000
+RATE_LIMIT_BURST=10
+
+# Security
+SESSION_SECRET=your-super-secret-session-key-change-this-in-production
+API_KEY_HASH_SALT=your-salt-for-api-key-hashing-change-this-in-production
+
+# Ollama Configuration
+OLLAMA_BASE_URL=http://ollama-server:11434
+OLLAMA_MODEL=llama2:latest
+OLLAMA_API_KEY=ollama
+
+# OpenAI Fallback
+OPENAI_API_KEY=your-openai-api-key
 ```
 
-#### For Ollama
+#### Frontend Configuration
 ```bash
-# ollama-setup/.env
-OLLAMA_MODEL=llama2
+# Widget Configuration
+CHATKIT_API_URL=https://your-api.com
+CHATKIT_THEME=light
+CHATKIT_POSITION=bottom-right
 ```
 
-### Model Selection
+### Docker Compose Configuration
 
-Edit `ollama-setup/.env` to choose your model:
+#### Production Configuration
+```yaml
+# docker-compose.prod.yml
+version: '3.8'
+services:
+  chatbot-backend:
+    image: your-registry/chatkit-backend:latest
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - OLLAMA_BASE_URL=http://ollama-server:11434
+      - OLLAMA_MODEL=llama2:latest
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-```bash
-# Available models (uncomment one):
-OLLAMA_MODEL=llama2        # 3.8GB - Good balance
-# OLLAMA_MODEL=mistral     # 4.1GB - Fast and efficient  
-# OLLAMA_MODEL=codellama   # 3.8GB - Code-focused
-# OLLAMA_MODEL=llama2:13b  # 7.3GB - Better quality
+  sample-website:
+    image: your-registry/chatkit-frontend:latest
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      - chatbot-backend
 ```
 
-## 📊 Deployment Comparison
+## 🔒 Security Configuration
 
-| Option | Backend | Frontend | LLM | Use Case |
-|--------|---------|----------|-----|----------|
-| `local` | Node.js | Python | OpenAI | Development |
-| `ollama` | Node.js | Python | Ollama/OpenAI | Development + Privacy |
-| `microservices` | Docker | Docker | OpenAI | Production |
-| `microservices-ollama` | Docker | Docker | External Ollama | Production + Privacy |
-
-## 🛠️ Management Commands
-
-### ChatKit Management
-```bash
-./deploy.sh local              # Start local development
-./deploy.sh microservices      # Start microservices
-./deploy.sh stop               # Stop all services
-./deploy.sh status             # Check status
+### SSL/TLS Setup
+```nginx
+# nginx.conf
+server {
+    listen 443 ssl http2;
+    server_name yourdomain.com;
+    
+    ssl_certificate /etc/ssl/certs/yourdomain.com.crt;
+    ssl_certificate_key /etc/ssl/private/yourdomain.com.key;
+    
+    location / {
+        proxy_pass http://chatkit-frontend;
+    }
+    
+    location /api/ {
+        proxy_pass http://chatkit-backend;
+    }
+}
 ```
 
-### Ollama Management
-```bash
-cd ollama-setup
-./setup.sh start              # Start Ollama
-./setup.sh stop               # Stop Ollama
-./setup.sh status             # Check status
-./setup.sh pull               # Pull model
-./setup.sh list               # List models
+### Security Headers
+```javascript
+// Security middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+  next();
+});
 ```
 
-## 🔍 Troubleshooting
+## 📊 Monitoring & Logging
 
-### ChatKit Issues
+### Health Checks
 ```bash
-# Check if services are running
-./deploy.sh status
+# Check backend health
+curl http://localhost:3001/health
 
+# Check frontend health
+curl http://localhost:8080
+
+# Check Ollama health
+curl http://localhost:11434/api/tags
+```
+
+### Logging Configuration
+```javascript
+// Structured logging
+const logger = {
+  info: (message, meta) => console.log(JSON.stringify({
+    level: 'info',
+    message,
+    timestamp: new Date().toISOString(),
+    service: 'chatkit-backend',
+    ...meta
+  }))
+};
+```
+
+### Monitoring Setup
+```yaml
+# Prometheus configuration
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'chatkit-backend'
+    static_configs:
+      - targets: ['chatkit-backend:3001']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+```
+
+## 🚀 Scaling
+
+### Horizontal Scaling
+```bash
+# Scale ChatBot backend
+docker service scale chatbot-backend=3
+
+# Scale with Docker Swarm
+docker service create --name chatbot-backend --replicas 3 your-registry/chatkit-backend
+```
+
+### Load Balancer Configuration
+```nginx
+# nginx load balancer
+upstream backend {
+    server chatbot-backend-1:3001;
+    server chatbot-backend-2:3001;
+    server chatbot-backend-3:3001;
+}
+
+server {
+    location /api/ {
+        proxy_pass http://backend;
+    }
+}
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Container Won't Start
+```bash
 # Check logs
-docker compose logs -f
+docker logs chatbot-backend-ollama
 
-# Restart services
-./deploy.sh stop
-./deploy.sh microservices
+# Check container status
+docker ps -a
+
+# Restart container
+docker restart chatbot-backend-ollama
 ```
 
-### Ollama Issues
+#### API Connection Issues
 ```bash
-# Check if Ollama is running
+# Test API connectivity
+curl -X POST http://localhost:3001/api/create-session
+
+# Check network connectivity
+docker network ls
+docker network inspect websitechatbot_chatbot-network
+```
+
+#### Ollama Connection Issues
+```bash
+# Check Ollama status
 curl http://localhost:11434/api/tags
 
 # Check Ollama logs
-cd ollama-setup
-docker compose logs ollama
+docker logs ollama-server
 
 # Restart Ollama
-./setup.sh restart
+cd ollama-setup && ./setup.sh restart
 ```
 
-### Connection Issues
+### Performance Issues
+
+#### High Memory Usage
 ```bash
-# Test ChatKit backend
-curl http://localhost:3001/health
+# Check memory usage
+docker stats
 
-# Test frontend
-curl http://localhost:8080
-
-# Test Ollama
-curl http://localhost:11434/api/tags
+# Increase memory limits
+docker run --memory=1g your-image
 ```
 
-## 🎯 Production Deployment
-
-### With OpenAI
+#### Slow Response Times
 ```bash
-# Deploy microservices
-./deploy.sh microservices
+# Check response times
+curl -w "@curl-format.txt" -o /dev/null -s http://localhost:3001/health
 
-# Your chatbot is ready!
-# Access at: http://localhost:8080
+# Monitor with htop
+htop
 ```
-
-### With Ollama (Private)
-```bash
-# 1. Set up Ollama (separate server/container)
-cd ollama-setup
-./setup.sh start
-
-# 2. Deploy ChatKit
-./deploy.sh microservices-ollama
-
-# Your private chatbot is ready!
-# Access at: http://localhost:8080
-```
-
-## 🎉 Benefits
-
-### With OpenAI
-- ✅ **No Setup**: Works out of the box
-- ✅ **Latest Models**: Access to newest OpenAI models
-- ✅ **High Quality**: Excellent response quality
-- ✅ **Reliable**: Cloud-based reliability
-
-### With Ollama
-- ✅ **Complete Privacy**: No data leaves your infrastructure
-- ✅ **No API Costs**: No per-token charges
-- ✅ **Offline Capable**: Works without internet
-- ✅ **Custom Models**: Use any compatible model
-- ✅ **Full Control**: Your infrastructure, your rules
 
 ## 📚 Additional Resources
 
-- **[LOCAL_LLM_GUIDE.md](LOCAL_LLM_GUIDE.md)** - Detailed Ollama integration guide
-- **[EXTERNAL_OLLAMA_SETUP.md](EXTERNAL_OLLAMA_SETUP.md)** - External Ollama setup
-- **[ollama-setup/README.md](ollama-setup/README.md)** - Ollama setup project
+- **[Architecture Documentation](ARCHITECTURE_DOCUMENTATION.md)** - Technical details
+- **[Security Guide](SECURITY_GUIDE.md)** - Security configuration
+- **[ChatKit Integration Guide](CHATKIT_INTEGRATION_GUIDE.md)** - Integration details
+- **[Ollama Setup](ollama-setup/README.md)** - Ollama configuration
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/websitechatbot/issues)
+- **Documentation**: See docs/ folder
+- **Examples**: See examples/ folder
 
 ---
 
-**Ready to deploy!** Choose your preferred option and start building! 🚀
+*This deployment guide covers the most common deployment scenarios. For specific cloud provider details, consult their official documentation.*

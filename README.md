@@ -60,6 +60,7 @@ websitechatbot/
 ### For Technical Details
 - **[Architecture Documentation](ARCHITECTURE_DOCUMENTATION.md)** - Complete technical overview
 - **[Security Guide](SECURITY_GUIDE.md)** - Comprehensive security documentation
+- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment instructions
 - **System architecture** and data flow
 - **Security and performance** considerations
 

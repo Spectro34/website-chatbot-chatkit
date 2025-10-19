@@ -159,29 +159,37 @@ MAX_REQUESTS_PER_HOUR=1000
 
 ## 🔧 Deployment Options
 
-### Option 1: Containerized Ollama (Recommended)
+### Option 1: Kubernetes with Helm Chart (Recommended for Production)
 ```bash
+# Add Helm repository
+helm repo add chatkit https://yourusername.github.io/websitechatbot
+helm repo update
+
+# Deploy with Ollama + OpenAI fallback
+helm install chatkit chatkit/chatkit -f examples/values-hybrid.yaml
+
+# Deploy with custom website
+helm install chatkit chatkit/chatkit -f examples/values-custom-website.yaml
+```
+- **Production-ready**: Auto-scaling, monitoring, security
+- **Flexible**: Choose Ollama-only, OpenAI-only, or hybrid
+- **Customizable**: Deploy your own website with ChatKit integrated
+- **Enterprise**: RBAC, network policies, persistent storage
+
+### Option 2: Docker Compose (Development/Testing)
+```bash
+# Containerized Ollama (Recommended)
 ./deploy.sh microservices-ollama
-```
-- Uses local Ollama container
-- No external API costs
-- Complete privacy
 
-### Option 2: OpenAI Only
-```bash
+# OpenAI Only
 ./deploy.sh microservices
-```
-- Uses OpenAI API
-- Requires API key
-- Faster responses
 
-### Option 3: Local Development
-```bash
+# Local Development
 ./deploy.sh ollama
 ```
-- Local development mode
-- Optional Ollama support
-- Hot reload enabled
+- **Quick setup**: Perfect for development and testing
+- **Local deployment**: Runs on your machine
+- **Easy configuration**: Simple environment variables
 
 ## 🌐 Website Integration
 
@@ -234,6 +242,7 @@ MAX_REQUESTS_PER_HOUR=1000
 - **[Architecture Guide](ARCHITECTURE_DOCUMENTATION.md)** - Technical details
 - **[Security Guide](SECURITY_GUIDE.md)** - Security features
 - **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment
+- **[Helm Chart](helm/README.md)** - Kubernetes deployment with Helm
 - **[Ollama Setup](ollama-setup/README.md)** - Local LLM setup
 
 ## 🛠️ Development

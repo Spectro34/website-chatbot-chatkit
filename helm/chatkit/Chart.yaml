@@ -1,0 +1,26 @@
+apiVersion: v2
+name: chatkit
+description: A production-ready, containerized AI chatbot that can be easily integrated into any website
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - chatbot
+  - ai
+  - openai
+  - ollama
+  - kubernetes
+  - helm
+home: https://github.com/yourusername/websitechatbot
+sources:
+  - https://github.com/yourusername/websitechatbot
+maintainers:
+  - name: ChatKit Team
+    email: support@yourdomain.com
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    condition: postgresql.enabled
+  - name: redis
+    version: "17.x.x"
+    condition: redis.enabled

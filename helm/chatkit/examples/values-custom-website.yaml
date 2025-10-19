@@ -1,0 +1,65 @@
+# Example: Custom website deployment
+# This configuration uses your own website with ChatKit integrated
+
+# Disable default frontend, use custom website
+frontend:
+  enabled: true
+  replicaCount: 2
+  customWebsite:
+    enabled: true
+    image:
+      repository: "your-registry/your-website"
+      tag: "latest"
+      pullPolicy: IfNotPresent
+  widget:
+    apiUrl: "https://chatkit.yourdomain.com/api"
+    theme: "light"
+    position: "bottom-right"
+    autoOpen: false
+
+# Backend configuration
+backend:
+  enabled: true
+  replicaCount: 3
+  env:
+    NODE_ENV: "production"
+    PORT: 3001
+    ALLOWED_ORIGINS: "https://yourdomain.com,https://www.yourdomain.com"
+    MAX_REQUESTS_PER_MINUTE: 120
+    MAX_REQUESTS_PER_HOUR: 2000
+
+# Ollama configuration
+ollama:
+  enabled: true
+  model: "llama2:latest"
+  resources:
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+  persistence:
+    enabled: true
+    size: 50Gi
+
+# OpenAI fallback
+openai:
+  enabled: true
+  apiKey: "sk-proj-your-openai-api-key-here"
+  model: "gpt-3.5-turbo"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  hosts:
+    - host: yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+    - host: chatkit.yourdomain.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend

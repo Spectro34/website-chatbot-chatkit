@@ -1,0 +1,54 @@
+# Example: Ollama-only deployment
+# This configuration uses only Ollama for AI responses
+
+# Disable OpenAI
+openai:
+  enabled: false
+
+# Enable Ollama
+ollama:
+  enabled: true
+  model: "llama2:latest"
+  resources:
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+  persistence:
+    enabled: true
+    size: 50Gi
+
+# Backend configuration
+backend:
+  enabled: true
+  replicaCount: 2
+  env:
+    NODE_ENV: "production"
+    PORT: 3001
+    ALLOWED_ORIGINS: "https://yourdomain.com"
+    MAX_REQUESTS_PER_MINUTE: 60
+    MAX_REQUESTS_PER_HOUR: 1000
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 2
+  widget:
+    theme: "light"
+    position: "bottom-right"
+    autoOpen: false
+
+# Ingress configuration
+ingress:
+  enabled: true
+  hosts:
+    - host: chatkit.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend

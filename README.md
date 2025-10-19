@@ -26,6 +26,18 @@ cp env.example .env
 ./deploy.sh microservices
 ```
 
+### Option 2b: Microservices with External Ollama (Private LLM)
+```bash
+git clone https://github.com/yourusername/websitechatbot.git
+cd websitechatbot
+
+# First, set up external Ollama (separate project)
+# See EXTERNAL_OLLAMA_SETUP.md for details
+
+# Deploy ChatKit with external Ollama
+./deploy.sh microservices-ollama
+```
+
 ### Option 3: With Optional Local LLM Support
 ```bash
 git clone https://github.com/yourusername/websitechatbot.git

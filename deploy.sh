@@ -260,6 +260,112 @@ start_docker() {
         wait
     }
 
+    # Function to start microservices deployment with external Ollama
+    start_microservices_ollama() {
+        print_status "Starting microservices deployment with external Ollama..."
+
+        # Check if Docker is running
+        if ! command_exists docker; then
+            print_error "Docker is not installed or not running!"
+            print_warning "Please install Docker Desktop and try again."
+            exit 1
+        fi
+
+        if ! docker info >/dev/null 2>&1; then
+            print_error "Docker daemon is not running!"
+            print_warning "Please start Docker Desktop and try again."
+            exit 1
+        fi
+
+        # Check if external Ollama is running
+        print_status "Checking external Ollama connection..."
+        if ! curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+            print_warning "External Ollama not detected at localhost:11434"
+            print_warning "Please ensure your Ollama container is running and accessible"
+            print_warning "You can set OLLAMA_BASE_URL environment variable if using different URL"
+            read -p "Continue anyway? (y/N): " continue_anyway
+            if [[ ! $continue_anyway =~ ^[Yy]$ ]]; then
+                print_error "Deployment cancelled. Please start your Ollama container first."
+                exit 1
+            fi
+        else
+            print_success "External Ollama detected and accessible"
+        fi
+
+        # Kill any existing containers
+        print_status "Stopping existing containers..."
+        docker compose down 2>/dev/null || true
+        docker compose -f docker-compose.microservices.yml down 2>/dev/null || true
+        docker compose -f docker-compose.microservices-ollama.yml down 2>/dev/null || true
+
+        # Create environment file for external Ollama
+        print_status "Creating environment file for external Ollama..."
+        cat > .env.ollama-microservices << EOF
+OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+OLLAMA_MODEL=${OLLAMA_MODEL:-llama2}
+OLLAMA_API_KEY=ollama
+PORT=3001
+NODE_ENV=production
+ALLOWED_ORIGINS=http://localhost:8080,http://localhost:3000
+RATE_LIMIT_REQUESTS_PER_MINUTE=60
+RATE_LIMIT_REQUESTS_PER_HOUR=1000
+RATE_LIMIT_BURST=10
+SESSION_SECRET=your-super-secret-session-key-change-this-in-production
+API_KEY_HASH_SALT=your-salt-for-api-key-hashing-change-this-in-production
+OPENAI_API_KEY=${OPENAI_API_KEY:-}
+EOF
+
+        # Build and start microservices
+        print_status "Building and starting microservices with external Ollama..."
+        docker compose -f docker-compose.microservices-ollama.yml up --build -d
+
+        # Wait for services to start
+        print_status "Waiting for microservices to start..."
+        sleep 15
+
+        # Check if services are running
+        if curl -s http://localhost:3001/health >/dev/null; then
+            print_success "ChatBot Backend is running on http://localhost:3001"
+        else
+            print_error "ChatBot Backend failed to start!"
+            docker compose -f docker-compose.microservices-ollama.yml logs chatbot-backend
+            exit 1
+        fi
+
+        if curl -s http://localhost:8080 >/dev/null; then
+            print_success "Sample Website is running on http://localhost:8080"
+        else
+            print_error "Sample Website failed to start!"
+            docker compose -f docker-compose.microservices-ollama.yml logs sample-website
+            exit 1
+        fi
+
+        # Create a simple test page
+        create_test_page
+
+        print_success "Microservices deployment with external Ollama complete!"
+        print_status "Access your services at:"
+        echo "  🌐 Sample Website: http://localhost:8080"
+        echo "  🔧 ChatBot Backend: http://localhost:3001"
+        echo "  🤖 External Ollama: ${OLLAMA_BASE_URL:-http://localhost:11434}"
+        echo "  📱 Widget Script: http://localhost:8080/chatkit-widget.js"
+        echo "  🧪 Test Page: http://localhost:8080/test.html"
+        echo ""
+        print_status "Architecture:"
+        echo "  📦 Sample Website Container (Port 8080)"
+        echo "  🤖 ChatBot Backend Container (Port 3001)"
+        echo "  🧠 External Ollama Container (Port 11434) - Separate project"
+        echo "  🌐 All containers communicate via Docker network"
+        echo ""
+        print_status "Prerequisites:"
+        echo "  ✅ External Ollama container must be running"
+        echo "  ✅ Ollama accessible at: ${OLLAMA_BASE_URL:-http://localhost:11434}"
+        echo "  ✅ Model '${OLLAMA_MODEL:-llama2}' must be available in Ollama"
+        echo ""
+        print_status "To stop: docker compose -f docker-compose.microservices-ollama.yml down"
+        print_status "To view logs: docker compose -f docker-compose.microservices-ollama.yml logs -f"
+    }
+
     # Function to start microservices deployment
     start_microservices() {
     print_status "Starting microservices deployment..."
@@ -526,8 +632,9 @@ show_help() {
     echo "Options:"
     echo "  local         Start local development environment"
     echo "  docker        Start Docker containerized deployment"
-    echo "  microservices Start microservices deployment (separate containers)"
-    echo "  ollama        Start with Ollama support (optional local LLM)"
+    echo "  microservices         Start microservices deployment (separate containers)"
+    echo "  microservices-ollama  Start microservices with external Ollama"
+    echo "  ollama                Start with Ollama support (optional local LLM)"
     echo "  stop          Stop all running services"
     echo "  status        Check status of running services"
     echo "  help          Show this help message"
@@ -535,16 +642,18 @@ show_help() {
     echo "Examples:"
     echo "  ./deploy.sh local         # Start local development"
     echo "  ./deploy.sh docker        # Start Docker deployment"
-    echo "  ./deploy.sh microservices # Start microservices deployment"
-    echo "  ./deploy.sh ollama        # Start Ollama deployment"
+    echo "  ./deploy.sh microservices         # Start microservices deployment"
+    echo "  ./deploy.sh microservices-ollama  # Start microservices with external Ollama"
+    echo "  ./deploy.sh ollama                # Start Ollama deployment"
     echo "  ./deploy.sh stop          # Stop all services"
     echo "  ./deploy.sh status        # Check service status"
     echo ""
     echo "Deployment Types:"
     echo "  local         - Fast development, both services in one process"
     echo "  docker        - Single container with both services"
-    echo "  microservices - Separate containers (production-like)"
-    echo "  ollama        - Optional local LLM support (falls back to OpenAI if not available)"
+    echo "  microservices         - Separate containers (production-like)"
+    echo "  microservices-ollama  - Separate containers + external Ollama LLM"
+    echo "  ollama                - Optional local LLM support (falls back to OpenAI if not available)"
 }
 
 # Function to stop services
@@ -609,6 +718,10 @@ case "${1:-}" in
             check_environment
             start_microservices
             ;;
+        "microservices-ollama")
+            check_environment
+            start_microservices_ollama
+            ;;
         "ollama")
             check_environment
             start_ollama
@@ -629,10 +742,11 @@ case "${1:-}" in
             echo "1) Local development (faster, for development)"
             echo "2) Docker deployment (single container)"
             echo "3) Microservices deployment (separate containers)"
-            echo "4) Ollama deployment (local LLM, private)"
-            echo "5) Show help"
+            echo "4) Microservices with external Ollama (separate containers + external LLM)"
+            echo "5) Ollama deployment (local LLM, private)"
+            echo "6) Show help"
             echo ""
-            read -p "Enter your choice (1-5): " choice
+            read -p "Enter your choice (1-6): " choice
 
             case $choice in
                 1)
@@ -650,9 +764,13 @@ case "${1:-}" in
                     ;;
                 4)
                     check_environment
-                    start_ollama
+                    start_microservices_ollama
                     ;;
                 5)
+                    check_environment
+                    start_ollama
+                    ;;
+                6)
                     show_help
                     ;;
                 *)

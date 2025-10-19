@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatKit Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .integration-code {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 ChatKit Test Page</h1>
+        
+        <div class="test-section">
+            <h3>✅ Deployment Status</h3>
+            <div id="status" class="status success">Checking services...</div>
+            <p>This page tests the ChatKit integration and shows you how to add it to any website.</p>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔧 Backend API Test</h3>
+            <button class="btn" onclick="testBackend()">Test Backend API</button>
+            <div id="backend-status"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📱 Widget Integration Test</h3>
+            <button class="btn" onclick="testWidget()">Test Widget Loading</button>
+            <div id="widget-status"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🚀 How to Add to Your Website</h3>
+            <p><strong>Option 1: One-line integration</strong></p>
+            <div class="integration-code">
+&lt;script 
+    src="http://localhost:8080/chatkit-widget.js"
+    data-backend-url="http://localhost:3001"
+    data-widget-title="AI Assistant"
+    data-primary-color="#3498db"&gt;
+&lt;/script&gt;
+            </div>
+            
+            <p><strong>Option 2: Manual initialization</strong></p>
+            <div class="integration-code">
+&lt;script src="http://localhost:8080/chatkit-widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+    ChatKit.init({
+        backendUrl: 'http://localhost:3001',
+        widgetTitle: 'My AI Assistant',
+        primaryColor: '#e74c3c'
+    });
+&lt;/script&gt;
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔗 Quick Links</h3>
+            <a href="http://localhost:8080" class="btn">Main Website</a>
+            <a href="http://localhost:8080/examples/basic-integration.html" class="btn">Basic Integration</a>
+            <a href="http://localhost:8080/examples/advanced-integration.html" class="btn">Advanced Integration</a>
+            <a href="http://localhost:3001/health" class="btn">Backend Health</a>
+        </div>
+    </div>
+
+    <script>
+        // Test backend API
+        async function testBackend() {
+            const statusDiv = document.getElementById('backend-status');
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = '<div class="status success">✅ Backend API is working! Status: ' + data.status + '</div>';
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Backend API returned error: ' + response.status + '</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Backend API test failed: ' + error.message + '</div>';
+            }
+        }
+        
+        // Test widget loading
+        function testWidget() {
+            const statusDiv = document.getElementById('widget-status');
+            if (typeof window.ChatKit !== 'undefined') {
+                statusDiv.innerHTML = '<div class="status success">✅ ChatKit widget is loaded and ready!</div>';
+            } else {
+                statusDiv.innerHTML = '<div class="status error">❌ ChatKit widget not loaded. Check console for errors.</div>';
+            }
+        }
+        
+        // Load ChatKit widget
+        const script = document.createElement('script');
+        script.src = 'http://localhost:8080/chatkit-widget.js';
+        script.onload = () => {
+            document.getElementById('status').innerHTML = '<div class="status success">✅ All services are running! ChatKit is ready to use.</div>';
+            testWidget();
+        };
+        script.onerror = () => {
+            document.getElementById('status').innerHTML = '<div class="status error">❌ Failed to load ChatKit widget. Check if services are running.</div>';
+        };
+        document.head.appendChild(script);
+        
+        // Auto-test backend on load
+        window.addEventListener('load', () => {
+            testBackend();
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "name": "website-chatbot-chatkit",
   "version": "1.0.0",
-  "description": "A secure, production-ready AI chatbot that can be integrated into any website with just one line of code",
+  "description": "A production-ready, pluggable AI chatbot that integrates into any website with flexible deployment options",
   "main": "backend/server.js",
   "scripts": {
     "start": "cd backend && npm start",
@@ -22,10 +22,13 @@
     "chatbot",
     "ai",
     "openai",
+    "ollama",
     "chatkit",
     "website",
     "integration",
-    "security",
+    "pluggable",
+    "kubernetes",
+    "helm",
     "production-ready"
   ],
   "author": "Your Name",

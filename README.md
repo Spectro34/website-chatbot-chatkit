@@ -1,6 +1,6 @@
-# 🤖 ChatKit - Containerized AI Chatbot
+# 🤖 ChatKit - Universal AI Chatbot
 
-A production-ready, containerized AI chatbot that can be easily integrated into any website. Features local LLM support via Ollama with automatic OpenAI fallback.
+A production-ready, pluggable AI chatbot that integrates into any website. Supports local LLM (Ollama) and cloud AI (OpenAI) with flexible deployment options.
 
 ## 🚀 Quick Start
 

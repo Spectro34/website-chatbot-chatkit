@@ -1,6 +1,6 @@
 # 🚀 ChatKit Helm Chart
 
-A production-ready Helm chart for deploying ChatKit AI chatbot on Kubernetes with customizable deployment options.
+A production-ready Helm chart for deploying ChatKit universal AI chatbot on Kubernetes with flexible deployment options.
 
 ## 📋 Features
 

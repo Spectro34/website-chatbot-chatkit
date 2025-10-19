@@ -1,6 +1,6 @@
 apiVersion: v2
 name: chatkit
-description: A production-ready, containerized AI chatbot that can be easily integrated into any website
+description: A production-ready, pluggable AI chatbot that integrates into any website with flexible deployment options
 type: application
 version: 1.0.0
 appVersion: "1.0.0"

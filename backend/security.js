@@ -37,8 +37,9 @@ class SecurityManager {
      * Validate OpenAI API key format
      */
     validateApiKeyFormat(apiKey) {
-        // OpenAI API keys start with 'sk-' and are 48+ characters
-        const openaiKeyPattern = /^sk-[a-zA-Z0-9]{48,}$/;
+        // OpenAI API keys start with 'sk-' and are 20+ characters
+        // Updated to be more flexible for different key formats
+        const openaiKeyPattern = /^sk-[a-zA-Z0-9_-]{20,}$/;
         return openaiKeyPattern.test(apiKey);
     }
 

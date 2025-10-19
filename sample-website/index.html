@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Chatbot Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .chat-toggle:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+        
+        .chat-panel {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1001;
+        }
+        
+        .chat-header {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+        
+        .send-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        
+        .message.user {
+            background: #3498db;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message.bot {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Working Chatbot Demo</h1>
+        <p>This page demonstrates a fully functional chatbot. Click the chat button in the bottom-right corner to start chatting!</p>
+        
+        <h2>Features:</h2>
+        <ul>
+            <li>✅ AI-powered responses using OpenAI GPT</li>
+            <li>✅ Session management</li>
+            <li>✅ Real-time messaging</li>
+            <li>✅ Mobile responsive</li>
+            <li>✅ Easy to integrate</li>
+        </ul>
+        
+        <h2>How to Test:</h2>
+        <ol>
+            <li>Click the blue chat button (💬) in the bottom-right corner</li>
+            <li>Type a message like "Hello" or "What can you help me with?"</li>
+            <li>Watch the AI respond in real-time</li>
+            <li>Try asking about services, products, or general questions</li>
+        </ol>
+    </div>
+    
+    <!-- Chat Button -->
+    <button class="chat-toggle" onclick="toggleChat()">💬</button>
+    
+    <!-- Chat Panel -->
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <h3 style="margin: 0; font-size: 1.1rem;">AI Assistant</h3>
+            <button onclick="closeChat()" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button class="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const CONFIG = {
+            backendUrl: 'http://localhost:3001',
+            sessionId: null
+        };
+        
+        let isChatOpen = false;
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing chat...');
+            createSession();
+            addMessage('AI Assistant', 'Hello! How can I help you today?', 'bot');
+        });
+        
+        async function createSession() {
+            try {
+                console.log('Creating session...');
+                const response = await fetch(`${CONFIG.backendUrl}/api/create-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                CONFIG.sessionId = data.sessionId;
+                console.log('Session created:', CONFIG.sessionId);
+            } catch (error) {
+                console.error('Error creating session:', error);
+                CONFIG.sessionId = 'demo_session_' + Date.now();
+            }
+        }
+        
+        function toggleChat() {
+            console.log('Toggle chat clicked');
+            if (isChatOpen) {
+                closeChat();
+            } else {
+                openChat();
+            }
+        }
+        
+        function openChat() {
+            console.log('Opening chat...');
+            const chatPanel = document.getElementById('chatPanel');
+            const chatButton = document.querySelector('.chat-toggle');
+            
+            chatPanel.style.display = 'flex';
+            chatButton.innerHTML = '✕';
+            chatButton.title = 'Close Chat';
+            isChatOpen = true;
+        }
+        
+        function closeChat() {
+            console.log('Closing chat...');
+            const chatPanel = document.getElementById('chatPanel');
+            const chatButton = document.querySelector('.chat-toggle');
+            
+            chatPanel.style.display = 'none';
+            chatButton.innerHTML = '💬';
+            chatButton.title = 'Open Chat';
+            isChatOpen = false;
+        }
+        
+        function addMessage(sender, message, type = 'user') {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-sender">${sender}</div>
+                <div>${message}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        async function sendMessage() {
+            const inputElement = document.getElementById('chatInput');
+            const message = inputElement.value.trim();
+            if (!message) return;
+            
+            console.log('Sending message:', message);
+            
+            // Add user message
+            addMessage('You', message, 'user');
+            inputElement.value = '';
+            
+            // Show typing indicator
+            addMessage('AI Assistant', 'Thinking...', 'bot');
+            
+            try {
+                console.log('Sending to backend...');
+                const response = await fetch(`${CONFIG.backendUrl}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sessionId: CONFIG.sessionId,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Response received:', data);
+                
+                // Remove typing indicator
+                const messages = document.getElementById('chatMessages');
+                messages.removeChild(messages.lastChild);
+                
+                // Add bot response
+                addMessage('AI Assistant', data.response, 'bot');
+                
+            } catch (error) {
+                console.error('ChatKit Error:', error);
+                
+                // Remove typing indicator
+                const messages = document.getElementById('chatMessages');
+                messages.removeChild(messages.lastChild);
+                
+                // Add error message
+                addMessage('AI Assistant', 'Sorry, I encountered an error. Please check the console for details.', 'bot');
+            }
+        }
+        
+        // Make functions globally available
+        window.toggleChat = toggleChat;
+        window.closeChat = closeChat;
+        window.sendMessage = sendMessage;
+        window.handleKeyPress = handleKeyPress;
+    </script>
+</body>
+</html>

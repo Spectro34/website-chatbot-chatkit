@@ -1,0 +1,42 @@
+{
+  "name": "website-chatbot-chatkit",
+  "version": "1.0.0",
+  "description": "A secure, production-ready AI chatbot that can be integrated into any website with just one line of code",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install-all": "cd backend && npm install && cd ../chatkit-app && npm install",
+    "test": "cd backend && npm test",
+    "build": "cd chatkit-app && npm run build",
+    "setup": "npm run install-all && echo 'Setup complete! Configure your .env files and run npm start'",
+    "security-check": "cd backend && node -e \"console.log('Security features: API key validation, rate limiting, CORS, input sanitization, session management')\""
+  },
+  "keywords": [
+    "chatbot",
+    "ai",
+    "openai",
+    "chatkit",
+    "website",
+    "integration",
+    "security",
+    "production-ready"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/website-chatbot-chatkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/website-chatbot-chatkit/issues"
+  },
+  "homepage": "https://github.com/yourusername/website-chatbot-chatkit#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

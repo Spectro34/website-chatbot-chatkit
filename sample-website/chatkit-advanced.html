@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Website with Advanced ChatKit</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- ChatKit CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@openai/chatkit-react@latest/dist/index.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="nav-logo">Sample Website</h1>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#home" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#about" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#services" class="nav-link">Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#contact" class="nav-link">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h2>Welcome to Our Sample Website</h2>
+                <p>This is a demonstration of how to integrate OpenAI's ChatKit into a website.</p>
+                <button class="cta-button" onclick="openChat()">Start Chatting</button>
+            </div>
+        </section>
+
+        <section id="about" class="section">
+            <div class="container">
+                <h2>About Us</h2>
+                <p>This sample website demonstrates the integration of OpenAI's ChatKit widget. The chatbot can help you with various questions and provide assistance.</p>
+                <div class="features">
+                    <div class="feature">
+                        <h3>AI-Powered Chat</h3>
+                        <p>Get instant responses from our AI assistant powered by OpenAI's latest models.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Easy Integration</h3>
+                        <p>Simple widget integration that works seamlessly with any website.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Customizable</h3>
+                        <p>Fully customizable appearance and behavior to match your brand.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="section">
+            <div class="container">
+                <h2>Our Services</h2>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <h3>Customer Support</h3>
+                        <p>24/7 AI-powered customer support to help with your queries.</p>
+                    </div>
+                    <div class="service-card">
+                        <h3>Information Retrieval</h3>
+                        <p>Quick access to information and answers to your questions.</p>
+                    </div>
+                    <div class="service-card">
+                        <h3>Interactive Experience</h3>
+                        <p>Engaging conversational experience for better user interaction.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="section">
+            <div class="container">
+                <h2>Contact Us</h2>
+                <p>Have questions? Use our AI chatbot or reach out to us directly!</p>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h4>Email</h4>
+                        <p>contact@samplewebsite.com</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>Phone</h4>
+                        <p>+1 (555) 123-4567</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>AI Assistant</h4>
+                        <p>Click the chat button to get instant help!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Sample Website. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- ChatKit Widget Container -->
+    <div id="chatkit-container"></div>
+
+    <!-- React and ChatKit -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@openai/chatkit-react@latest/dist/index.umd.js"></script>
+    
+    <!-- ChatKit Integration Script -->
+    <script>
+        // Configuration - Replace with your actual values
+        const CHATKIT_CONFIG = {
+            workflowId: 'your_workflow_id_here', // Replace with your ChatKit workflow ID
+            apiKey: 'your_openai_api_key_here', // Replace with your OpenAI API key
+        };
+
+        // ChatKit Integration
+        function initializeChatKit() {
+            const { ChatKit } = window.ChatKitReact;
+            const container = document.getElementById('chatkit-container');
+            
+            // Create a simple chat interface
+            const chatInterface = React.createElement('div', {
+                style: {
+                    position: 'fixed',
+                    bottom: '20px',
+                    right: '20px',
+                    width: '350px',
+                    height: '500px',
+                    background: 'white',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                    display: 'none',
+                    flexDirection: 'column',
+                    zIndex: 1001
+                },
+                id: 'chat-panel'
+            }, [
+                // Chat header
+                React.createElement('div', {
+                    key: 'header',
+                    style: {
+                        background: '#3498db',
+                        color: 'white',
+                        padding: '15px',
+                        borderRadius: '10px 10px 0 0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }
+                }, [
+                    React.createElement('h3', {
+                        key: 'title',
+                        style: { margin: 0, fontSize: '1.1rem' }
+                    }, 'AI Assistant'),
+                    React.createElement('button', {
+                        key: 'close',
+                        id: 'close-chat',
+                        style: {
+                            background: 'none',
+                            border: 'none',
+                            color: 'white',
+                            fontSize: '1.2rem',
+                            cursor: 'pointer'
+                        },
+                        onClick: closeChat
+                    }, '×')
+                ]),
+                // Chat messages area
+                React.createElement('div', {
+                    key: 'messages',
+                    id: 'chat-messages',
+                    style: {
+                        flex: 1,
+                        padding: '15px',
+                        overflowY: 'auto',
+                        background: '#f8f9fa'
+                    }
+                }),
+                // Chat input area
+                React.createElement('div', {
+                    key: 'input',
+                    style: {
+                        padding: '15px',
+                        borderTop: '1px solid #e0e0e0',
+                        display: 'flex',
+                        gap: '10px'
+                    }
+                }, [
+                    React.createElement('input', {
+                        key: 'input-field',
+                        type: 'text',
+                        placeholder: 'Type your message...',
+                        id: 'chat-input',
+                        style: {
+                            flex: 1,
+                            padding: '10px',
+                            border: '1px solid #ddd',
+                            borderRadius: '20px',
+                            outline: 'none'
+                        },
+                        onKeyPress: (e) => {
+                            if (e.key === 'Enter') {
+                                sendMessage();
+                            }
+                        }
+                    }),
+                    React.createElement('button', {
+                        key: 'send',
+                        onClick: sendMessage,
+                        style: {
+                            background: '#3498db',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 20px',
+                            borderRadius: '20px',
+                            cursor: 'pointer'
+                        }
+                    }, 'Send')
+                ])
+            ]);
+
+            ReactDOM.render(chatInterface, container);
+
+            // Add welcome message
+            addMessage('AI Assistant', 'Hello! How can I help you today?', 'bot');
+        }
+
+        function addMessage(sender, message, type = 'user') {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            
+            messageDiv.style.cssText = `
+                margin-bottom: 15px;
+                padding: 10px;
+                border-radius: 10px;
+                max-width: 80%;
+                ${type === 'user' ? 
+                    'background: #3498db; color: white; margin-left: auto;' : 
+                    'background: white; color: #333; border: 1px solid #e0e0e0;'
+                }
+            `;
+            
+            messageDiv.innerHTML = `
+                <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 5px;">${sender}</div>
+                <div>${message}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMessage() {
+            const inputElement = document.getElementById('chat-input');
+            const message = inputElement.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addMessage('You', message, 'user');
+            inputElement.value = '';
+            
+            // Show typing indicator
+            addMessage('AI Assistant', 'Thinking...', 'bot');
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Remove typing indicator
+                const messages = document.getElementById('chat-messages');
+                messages.removeChild(messages.lastChild);
+                
+                // Add bot response
+                const response = getResponse(message);
+                addMessage('AI Assistant', response, 'bot');
+            }, 1000);
+        }
+
+        function getResponse(message) {
+            const responses = {
+                'hello': 'Hello! How can I help you today?',
+                'help': 'I can help you with various questions about our services, products, or general information. What would you like to know?',
+                'services': 'We offer AI-powered customer support, information retrieval, and interactive experiences. Is there something specific you\'d like to know about?',
+                'contact': 'You can reach us at contact@samplewebsite.com or call +1 (555) 123-4567. I\'m also here to help with any questions!',
+                'default': 'I understand you\'re asking about "' + message + '". This is a demo response. In a real implementation, this would connect to OpenAI\'s ChatKit API.'
+            };
+            
+            const lowerMessage = message.toLowerCase();
+            
+            for (const [keyword, response] of Object.entries(responses)) {
+                if (lowerMessage.includes(keyword)) {
+                    return response;
+                }
+            }
+            
+            return responses.default;
+        }
+
+        function openChat() {
+            const chatPanel = document.getElementById('chat-panel');
+            const chatButton = document.querySelector('.chat-toggle');
+            
+            if (chatPanel) {
+                chatPanel.style.display = 'flex';
+                if (chatButton) {
+                    chatButton.innerHTML = '✕';
+                    chatButton.title = 'Close Chat';
+                }
+            }
+        }
+
+        function closeChat() {
+            const chatPanel = document.getElementById('chat-panel');
+            const chatButton = document.querySelector('.chat-toggle');
+            
+            if (chatPanel) {
+                chatPanel.style.display = 'none';
+                if (chatButton) {
+                    chatButton.innerHTML = '💬';
+                    chatButton.title = 'Open Chat';
+                }
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChatKit();
+        });
+
+        // Make functions globally available
+        window.openChat = openChat;
+        window.closeChat = closeChat;
+    </script>
+</body>
+</html>

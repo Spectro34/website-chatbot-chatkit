@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Website with ChatKit Backend</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="nav-logo">Sample Website</h1>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#home" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#about" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#services" class="nav-link">Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#contact" class="nav-link">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h2>Welcome to Our Sample Website</h2>
+                <p>This is a demonstration of how to integrate OpenAI's ChatKit into a website with a backend API.</p>
+                <button class="cta-button" onclick="openChat()">Start Chatting</button>
+            </div>
+        </section>
+
+        <section id="about" class="section">
+            <div class="container">
+                <h2>About Us</h2>
+                <p>This sample website demonstrates the integration of OpenAI's ChatKit widget with a backend API. The chatbot can help you with various questions and provide assistance.</p>
+                <div class="features">
+                    <div class="feature">
+                        <h3>AI-Powered Chat</h3>
+                        <p>Get instant responses from our AI assistant powered by OpenAI's latest models.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Backend Integration</h3>
+                        <p>Full backend API integration for session management and conversation history.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Customizable</h3>
+                        <p>Fully customizable appearance and behavior to match your brand.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="section">
+            <div class="container">
+                <h2>Our Services</h2>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <h3>Customer Support</h3>
+                        <p>24/7 AI-powered customer support to help with your queries.</p>
+                    </div>
+                    <div class="service-card">
+                        <h3>Information Retrieval</h3>
+                        <p>Quick access to information and answers to your questions.</p>
+                    </div>
+                    <div class="service-card">
+                        <h3>Interactive Experience</h3>
+                        <p>Engaging conversational experience for better user interaction.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="section">
+            <div class="container">
+                <h2>Contact Us</h2>
+                <p>Have questions? Use our AI chatbot or reach out to us directly!</p>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h4>Email</h4>
+                        <p>contact@samplewebsite.com</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>Phone</h4>
+                        <p>+1 (555) 123-4567</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>AI Assistant</h4>
+                        <p>Click the chat button to get instant help!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Sample Website. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- ChatKit Widget Container -->
+    <div id="chatkit-container"></div>
+
+    <!-- ChatKit Integration Script -->
+    <script>
+        // Configuration
+        const CONFIG = {
+            backendUrl: 'http://localhost:3001', // Backend API URL
+            sessionId: null
+        };
+
+        // Chat state
+        let isChatOpen = false;
+        let chatContainer = null;
+
+        // Initialize ChatKit when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChatKit();
+        });
+
+        async function initializeChatKit() {
+            // Create chat container
+            chatContainer = document.getElementById('chatkit-container');
+            
+            // Create chat toggle button
+            const chatButton = document.createElement('button');
+            chatButton.className = 'chat-toggle';
+            chatButton.innerHTML = '💬';
+            chatButton.title = 'Open Chat';
+            chatButton.onclick = toggleChat;
+            
+            chatContainer.appendChild(chatButton);
+            
+            // Create chat panel
+            const chatPanel = document.createElement('div');
+            chatPanel.id = 'chat-panel';
+            chatPanel.style.cssText = `
+                position: fixed;
+                bottom: 90px;
+                right: 20px;
+                width: 350px;
+                height: 500px;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                display: none;
+                flex-direction: column;
+                z-index: 1001;
+            `;
+            
+            // Create chat header
+            const chatHeader = document.createElement('div');
+            chatHeader.style.cssText = `
+                background: #3498db;
+                color: white;
+                padding: 15px;
+                border-radius: 10px 10px 0 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            `;
+            chatHeader.innerHTML = `
+                <h3 style="margin: 0; font-size: 1.1rem;">AI Assistant</h3>
+                <button id="close-chat" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;">×</button>
+            `;
+            
+            // Create chat messages area
+            const chatMessages = document.createElement('div');
+            chatMessages.id = 'chat-messages';
+            chatMessages.style.cssText = `
+                flex: 1;
+                padding: 15px;
+                overflow-y: auto;
+                background: #f8f9fa;
+            `;
+            
+            // Create chat input area
+            const chatInputArea = document.createElement('div');
+            chatInputArea.style.cssText = `
+                padding: 15px;
+                border-top: 1px solid #e0e0e0;
+                display: flex;
+                gap: 10px;
+            `;
+            
+            const chatInput = document.createElement('input');
+            chatInput.type = 'text';
+            chatInput.placeholder = 'Type your message...';
+            chatInput.id = 'chat-input';
+            chatInput.style.cssText = `
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 20px;
+                outline: none;
+            `;
+            
+            const sendButton = document.createElement('button');
+            sendButton.innerHTML = 'Send';
+            sendButton.style.cssText = `
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 20px;
+                cursor: pointer;
+            `;
+            
+            chatInputArea.appendChild(chatInput);
+            chatInputArea.appendChild(sendButton);
+            
+            // Assemble chat panel
+            chatPanel.appendChild(chatHeader);
+            chatPanel.appendChild(chatMessages);
+            chatPanel.appendChild(chatInputArea);
+            
+            chatContainer.appendChild(chatPanel);
+            
+            // Add event listeners
+            document.getElementById('close-chat').onclick = closeChat;
+            sendButton.onclick = () => sendMessage(chatInput);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage(chatInput);
+                }
+            });
+            
+            // Create session
+            await createSession();
+            
+            // Add welcome message
+            addMessage('AI Assistant', 'Hello! How can I help you today?', 'bot');
+        }
+
+        async function createSession() {
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/create-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                CONFIG.sessionId = data.sessionId;
+                console.log('Session created:', CONFIG.sessionId);
+            } catch (error) {
+                console.error('Error creating session:', error);
+                // Fallback to demo mode
+                CONFIG.sessionId = 'demo_session_' + Date.now();
+            }
+        }
+
+        function addMessage(sender, message, type = 'user') {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            
+            messageDiv.style.cssText = `
+                margin-bottom: 15px;
+                padding: 10px;
+                border-radius: 10px;
+                max-width: 80%;
+                ${type === 'user' ? 
+                    'background: #3498db; color: white; margin-left: auto;' : 
+                    'background: white; color: #333; border: 1px solid #e0e0e0;'
+                }
+            `;
+            
+            messageDiv.innerHTML = `
+                <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 5px;">${sender}</div>
+                <div>${message}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function toggleChat() {
+            if (isChatOpen) {
+                closeChat();
+            } else {
+                openChat();
+            }
+        }
+
+        function openChat() {
+            const chatPanel = document.getElementById('chat-panel');
+            const chatButton = document.querySelector('.chat-toggle');
+            
+            chatPanel.style.display = 'flex';
+            chatButton.innerHTML = '✕';
+            chatButton.title = 'Close Chat';
+            isChatOpen = true;
+        }
+
+        function closeChat() {
+            const chatPanel = document.getElementById('chat-panel');
+            const chatButton = document.querySelector('.chat-toggle');
+            
+            chatPanel.style.display = 'none';
+            chatButton.innerHTML = '💬';
+            chatButton.title = 'Open Chat';
+            isChatOpen = false;
+        }
+
+        async function sendMessage(inputElement) {
+            const message = inputElement.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addMessage('You', message, 'user');
+            inputElement.value = '';
+            
+            // Show typing indicator
+            addMessage('AI Assistant', 'Thinking...', 'bot');
+            
+            try {
+                // Send message to backend
+                const response = await fetch(`${CONFIG.backendUrl}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sessionId: CONFIG.sessionId,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Remove typing indicator
+                const messages = document.getElementById('chat-messages');
+                messages.removeChild(messages.lastChild);
+                
+                // Add bot response
+                addMessage('AI Assistant', data.response, 'bot');
+                
+            } catch (error) {
+                // Remove typing indicator
+                const messages = document.getElementById('chat-messages');
+                messages.removeChild(messages.lastChild);
+                
+                // Add error message
+                addMessage('AI Assistant', 'Sorry, I encountered an error. Please make sure the backend server is running.', 'bot');
+                console.error('ChatKit Error:', error);
+            }
+        }
+
+        // Function to open chat from CTA button
+        function openChat() {
+            if (!isChatOpen) {
+                toggleChat();
+            }
+        }
+
+        // Export functions for global access
+        window.openChat = openChat;
+        window.toggleChat = toggleChat;
+    </script>
+</body>
+</html>

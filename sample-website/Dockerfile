@@ -5,20 +5,15 @@ FROM nginx:alpine
 COPY . /usr/share/nginx/html/
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
-# Create non-root user
-RUN addgroup -g 1001 -S nginx-user
-RUN adduser -S website -u 1001
-
-# Change ownership
-RUN chown -R website:nginx-user /usr/share/nginx/html
-RUN chown -R website:nginx-user /var/cache/nginx
-RUN chown -R website:nginx-user /var/log/nginx
-RUN chown -R website:nginx-user /etc/nginx/conf.d
-
-# Switch to non-root user
-USER website
+# Create directories and set permissions
+RUN mkdir -p /run/nginx && \
+    chown -R nginx:nginx /run/nginx && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /etc/nginx/conf.d
 
 # Expose port
 EXPOSE 80

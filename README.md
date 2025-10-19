@@ -93,15 +93,17 @@ websitechatbot/
 
 ## 🎯 Live Demo
 
-**Docker Deployment:**
-- **Website**: http://localhost:8080
-- **Backend API**: http://localhost:3001
-- **Widget Script**: http://localhost:8080/chatkit-widget.js
+**Microservices Deployment (Currently Running):**
+- **🌐 Sample Website**: http://localhost:8080 (Container)
+- **🔧 ChatBot Backend**: http://localhost:3001 (Container)
+- **📱 Widget Script**: http://localhost:8080/chatkit-widget.js
+- **🧪 Test Page**: http://localhost:8080/test.html
 
 **Integration Examples:**
 - **Basic Integration**: http://localhost:8080/examples/basic-integration.html
 - **Advanced Integration**: http://localhost:8080/examples/advanced-integration.html
-- **Status**: ✅ Fully functional with your OpenAI API key
+
+**Status**: ✅ Fully functional with microservices architecture
 
 ## 📚 Documentation
 

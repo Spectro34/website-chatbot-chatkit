@@ -12,7 +12,10 @@
 # Local Development (faster, for testing)
 ./deploy.sh local
 
-# Docker Deployment (production-like)
+# Microservices Deployment (production-like, separate containers)
+./deploy.sh microservices
+
+# Single Container Deployment
 ./deploy.sh docker
 ```
 
@@ -53,11 +56,12 @@ After running the deployment script, you'll have:
 ## 🛠️ Commands
 
 ```bash
-./deploy.sh local     # Start local development
-./deploy.sh docker    # Start Docker deployment
-./deploy.sh stop      # Stop all services
-./deploy.sh status    # Check service status
-./deploy.sh help      # Show help
+./deploy.sh local         # Start local development
+./deploy.sh microservices # Start microservices deployment (recommended)
+./deploy.sh docker        # Start single container deployment
+./deploy.sh stop          # Stop all services
+./deploy.sh status        # Check service status
+./deploy.sh help          # Show help
 ```
 
 ## 🔧 Configuration

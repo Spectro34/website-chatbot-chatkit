@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # ChatBot Backend Service
+  chatbot-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chatbot-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8080,http://localhost:3000,http://localhost:80}
+      - MAX_REQUESTS_PER_MINUTE=${MAX_REQUESTS_PER_MINUTE:-60}
+      - MAX_REQUESTS_PER_HOUR=${MAX_REQUESTS_PER_HOUR:-1000}
+      - SESSION_MAX_AGE_HOURS=${SESSION_MAX_AGE_HOURS:-24}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - chatbot-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chatbot-backend.rule=Host(`api.yourdomain.com`)"
+      - "traefik.http.services.chatbot-backend.loadbalancer.server.port=3001"
+
+  # Sample Website Service
+  sample-website:
+    build:
+      context: ./sample-website
+      dockerfile: Dockerfile
+    container_name: sample-website
+    ports:
+      - "8080:80"
+    depends_on:
+      - chatbot-backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - chatbot-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sample-website.rule=Host(`yourdomain.com`)"
+      - "traefik.http.services.sample-website.loadbalancer.server.port=80"
+
+  # Optional: Reverse Proxy (for production)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - chatbot-backend
+      - sample-website
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+    profiles:
+      - production
+
+networks:
+  chatbot-network:
+    driver: bridge
+    name: chatbot-network
+
+volumes:
+  chatbot-data:
+    driver: local

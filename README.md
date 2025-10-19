@@ -4,18 +4,29 @@ A complete, production-ready AI chatbot solution that can be easily integrated i
 
 ## 🚀 Quick Start
 
-### Option 1: Docker Deployment (Recommended)
+### Option 1: One-Command Deployment (Recommended)
 ```bash
 git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot
 cp env.example .env
 # Edit .env with your OpenAI API key
 
-# Start with Docker
-npm run docker-up
+# Deploy with one command
+./deploy.sh
 ```
 
-### Option 2: Local Development
+### Option 2: Microservices Deployment (Production)
+```bash
+git clone https://github.com/yourusername/websitechatbot.git
+cd websitechatbot
+cp env.example .env
+# Edit .env with your OpenAI API key
+
+# Deploy microservices (separate containers)
+./deploy.sh microservices
+```
+
+### Option 3: Local Development
 ```bash
 git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot
@@ -96,6 +107,8 @@ websitechatbot/
 
 ### For Quick Integration
 - **[Getting Started Kit](GETTING_STARTED_KIT.md)** - 3-step integration guide
+- **[Plug & Play Guide](PLUG_AND_PLAY_GUIDE.md)** - Complete integration guide
+- **[Microservices Deployment](MICROSERVICES_DEPLOYMENT.md)** - Production microservices setup
 - **[Containerized Deployment Guide](containerized-deployment-guide.md)** - Docker deployment and scaling
 - **One-line integration** for any website
 - **Customization options** and examples

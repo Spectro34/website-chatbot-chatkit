@@ -160,6 +160,7 @@ start_docker() {
     # Kill any existing containers
     print_status "Stopping existing containers..."
     docker compose down 2>/dev/null || true
+    docker compose -f docker-compose.microservices.yml down 2>/dev/null || true
     
     # Build and start containers
     print_status "Building and starting containers..."
@@ -198,6 +199,72 @@ start_docker() {
     echo ""
     print_status "To stop: docker compose down"
     print_status "To view logs: docker compose logs -f"
+}
+
+# Function to start microservices deployment
+start_microservices() {
+    print_status "Starting microservices deployment..."
+    
+    # Check if Docker is running
+    if ! command_exists docker; then
+        print_error "Docker is not installed or not running!"
+        print_warning "Please install Docker Desktop and try again."
+        exit 1
+    fi
+    
+    if ! docker info >/dev/null 2>&1; then
+        print_error "Docker daemon is not running!"
+        print_warning "Please start Docker Desktop and try again."
+        exit 1
+    fi
+    
+    # Kill any existing containers
+    print_status "Stopping existing containers..."
+    docker compose down 2>/dev/null || true
+    docker compose -f docker-compose.microservices.yml down 2>/dev/null || true
+    
+    # Build and start microservices
+    print_status "Building and starting microservices..."
+    docker compose -f docker-compose.microservices.yml up --build -d
+    
+    # Wait for services to start
+    print_status "Waiting for microservices to start..."
+    sleep 15
+    
+    # Check if services are running
+    if curl -s http://localhost:3001/health > /dev/null; then
+        print_success "ChatBot Backend is running on http://localhost:3001"
+    else
+        print_error "ChatBot Backend failed to start!"
+        docker compose -f docker-compose.microservices.yml logs chatbot-backend
+        exit 1
+    fi
+    
+    if curl -s http://localhost:8080/health > /dev/null; then
+        print_success "Sample Website is running on http://localhost:8080"
+    else
+        print_error "Sample Website failed to start!"
+        docker compose -f docker-compose.microservices.yml logs sample-website
+        exit 1
+    fi
+    
+    # Create a simple test page
+    create_test_page
+    
+    print_success "Microservices deployment complete!"
+    print_status "Access your services at:"
+    echo "  🌐 Sample Website: http://localhost:8080"
+    echo "  🔧 ChatBot Backend: http://localhost:3001"
+    echo "  📱 Widget Script: http://localhost:8080/chatkit-widget.js"
+    echo "  🧪 Test Page: http://localhost:8080/test.html"
+    echo ""
+    print_status "Architecture:"
+    echo "  📦 Sample Website Container (Port 8080)"
+    echo "  🤖 ChatBot Backend Container (Port 3001)"
+    echo "  🌐 Both containers communicate via Docker network"
+    echo ""
+    print_status "To stop: docker compose -f docker-compose.microservices.yml down"
+    print_status "To view logs: docker compose -f docker-compose.microservices.yml logs -f"
 }
 
 # Function to create a test page
@@ -398,17 +465,24 @@ show_help() {
     echo "Usage: ./deploy.sh [OPTION]"
     echo ""
     echo "Options:"
-    echo "  local     Start local development environment"
-    echo "  docker    Start Docker containerized deployment"
-    echo "  stop      Stop all running services"
-    echo "  status    Check status of running services"
-    echo "  help      Show this help message"
+    echo "  local         Start local development environment"
+    echo "  docker        Start Docker containerized deployment"
+    echo "  microservices Start microservices deployment (separate containers)"
+    echo "  stop          Stop all running services"
+    echo "  status        Check status of running services"
+    echo "  help          Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./deploy.sh local    # Start local development"
-    echo "  ./deploy.sh docker   # Start Docker deployment"
-    echo "  ./deploy.sh stop     # Stop all services"
-    echo "  ./deploy.sh status   # Check service status"
+    echo "  ./deploy.sh local         # Start local development"
+    echo "  ./deploy.sh docker        # Start Docker deployment"
+    echo "  ./deploy.sh microservices # Start microservices deployment"
+    echo "  ./deploy.sh stop          # Stop all services"
+    echo "  ./deploy.sh status        # Check service status"
+    echo ""
+    echo "Deployment Types:"
+    echo "  local         - Fast development, both services in one process"
+    echo "  docker        - Single container with both services"
+    echo "  microservices - Separate containers (production-like)"
 }
 
 # Function to stop services
@@ -418,6 +492,7 @@ stop_services() {
     # Stop Docker containers
     if command_exists docker && docker info >/dev/null 2>&1; then
         docker compose down 2>/dev/null || true
+        docker compose -f docker-compose.microservices.yml down 2>/dev/null || true
         print_success "Docker containers stopped"
     fi
     
@@ -468,6 +543,10 @@ case "${1:-}" in
         check_environment
         start_docker
         ;;
+    "microservices")
+        check_environment
+        start_microservices
+        ;;
     "stop")
         stop_services
         ;;
@@ -482,10 +561,11 @@ case "${1:-}" in
         echo ""
         echo "Choose deployment method:"
         echo "1) Local development (faster, for development)"
-        echo "2) Docker deployment (production-like, isolated)"
-        echo "3) Show help"
+        echo "2) Docker deployment (single container)"
+        echo "3) Microservices deployment (separate containers)"
+        echo "4) Show help"
         echo ""
-        read -p "Enter your choice (1-3): " choice
+        read -p "Enter your choice (1-4): " choice
         
         case $choice in
             1)
@@ -498,6 +578,10 @@ case "${1:-}" in
                 start_docker
                 ;;
             3)
+                check_environment
+                start_microservices
+                ;;
+            4)
                 show_help
                 ;;
             *)

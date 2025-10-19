@@ -201,9 +201,9 @@ start_docker() {
     print_status "To view logs: docker compose logs -f"
 }
 
-    # Function to start Ollama deployment (optional)
+    # Function to start local development with Ollama support
     start_ollama() {
-        print_status "Starting ChatKit with optional Ollama support..."
+        print_status "Starting ChatKit with Ollama support..."
 
         # Kill any existing processes
         kill_port 3001
@@ -252,7 +252,7 @@ start_docker() {
         print_status "🤖 Ollama Integration:"
         echo "  - If Ollama is running: Uses local LLM (private)"
         echo "  - If Ollama not available: Falls back to OpenAI"
-        echo "  - To use Ollama: 'brew install ollama && ollama serve && ollama pull llama2'"
+        echo "  - To use Ollama: See ollama-setup/README.md for setup"
         echo ""
         print_status "Press Ctrl+C to stop all services"
 
@@ -634,7 +634,7 @@ show_help() {
     echo "  docker        Start Docker containerized deployment"
     echo "  microservices         Start microservices deployment (separate containers)"
     echo "  microservices-ollama  Start microservices with external Ollama"
-    echo "  ollama                Start with Ollama support (optional local LLM)"
+    echo "  ollama                Start local development with Ollama support"
     echo "  stop          Stop all running services"
     echo "  status        Check status of running services"
     echo "  help          Show this help message"
@@ -653,7 +653,7 @@ show_help() {
     echo "  docker        - Single container with both services"
     echo "  microservices         - Separate containers (production-like)"
     echo "  microservices-ollama  - Separate containers + external Ollama LLM"
-    echo "  ollama                - Optional local LLM support (falls back to OpenAI if not available)"
+    echo "  ollama                - Local development with optional Ollama support"
 }
 
 # Function to stop services
@@ -743,7 +743,7 @@ case "${1:-}" in
             echo "2) Docker deployment (single container)"
             echo "3) Microservices deployment (separate containers)"
             echo "4) Microservices with external Ollama (separate containers + external LLM)"
-            echo "5) Ollama deployment (local LLM, private)"
+            echo "5) Local development with Ollama (optional local LLM)"
             echo "6) Show help"
             echo ""
             read -p "Enter your choice (1-6): " choice

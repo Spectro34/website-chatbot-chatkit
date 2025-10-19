@@ -1,386 +1,208 @@
-# Deployment Guide for ChatKit Integration
+# 🚀 ChatKit Deployment Guide
 
-## 🚀 Quick Deployment Options
+## Overview
 
-### Option 1: Vercel (Recommended - Free Tier Available)
+This guide shows you how to deploy ChatKit with different configurations, including optional Ollama support.
 
-#### Backend Deployment
+## 🏗️ Architecture Options
+
+### 1. Local Development
+- **Backend**: Node.js process
+- **Frontend**: Python HTTP server
+- **LLM**: OpenAI API (or optional Ollama)
+
+### 2. Microservices (Production)
+- **Backend**: Docker container
+- **Frontend**: Docker container (Nginx)
+- **LLM**: OpenAI API (or external Ollama)
+
+## 🚀 Quick Deployment
+
+### Option 1: Local Development
 ```bash
-# Install Vercel CLI
-npm i -g vercel
+# Start with OpenAI
+./deploy.sh local
 
-# Deploy backend
-cd backend
-vercel --prod
-
-# Set environment variables
-vercel env add OPENAI_API_KEY
-vercel env add ALLOWED_ORIGINS
+# Start with optional Ollama support
+./deploy.sh ollama
 ```
 
-#### Frontend Deployment
+### Option 2: Microservices
 ```bash
-# Deploy frontend (static files)
-cd sample-website
-vercel --prod
+# With OpenAI
+./deploy.sh microservices
+
+# With external Ollama
+./deploy.sh microservices-ollama
 ```
 
-### Option 2: Heroku (Easy Setup)
+## 🤖 Ollama Setup (Optional)
 
-#### Backend Deployment
+### Step 1: Set Up Ollama (Separate Project)
 ```bash
-# Install Heroku CLI
-# Create Heroku app
-heroku create your-chatbot-backend
+cd ollama-setup
 
-# Set environment variables
-heroku config:set OPENAI_API_KEY=sk-proj-your-key
-heroku config:set ALLOWED_ORIGINS=https://your-website.com
+# Quick setup
+./setup.sh
 
-# Deploy
-git push heroku main
+# Or manual setup
+cp env.example .env
+# Edit .env to choose your model
+docker compose up -d
+docker exec ollama-server ollama pull llama2
 ```
 
-### Option 3: AWS (Production Scale)
-
-#### Using AWS Elastic Beanstalk
+### Step 2: Deploy ChatKit
 ```bash
-# Install EB CLI
-pip install awsebcli
+# Local development with Ollama
+./deploy.sh ollama
 
-# Initialize EB
-eb init
-
-# Create environment
-eb create production
-
-# Deploy
-eb deploy
+# Or microservices with external Ollama
+./deploy.sh microservices-ollama
 ```
 
-## 🔧 Environment Configuration
+## 🔧 Configuration
 
-### Required Environment Variables
+### Environment Variables
+
+#### For OpenAI (Default)
+```bash
+# backend/.env
+OPENAI_API_KEY=sk-your-key-here
+```
+
+#### For Ollama
+```bash
+# ollama-setup/.env
+OLLAMA_MODEL=llama2
+```
+
+### Model Selection
+
+Edit `ollama-setup/.env` to choose your model:
 
 ```bash
-# OpenAI Configuration
-OPENAI_API_KEY=sk-proj-your-openai-api-key-here
-
-# Server Configuration
-PORT=3001
-NODE_ENV=production
-
-# Security Configuration
-ALLOWED_ORIGINS=https://your-website.com,https://www.your-website.com
-
-# Optional Configuration
-MAX_REQUESTS_PER_MINUTE=60
-MAX_REQUESTS_PER_HOUR=1000
-SESSION_MAX_AGE_HOURS=24
+# Available models (uncomment one):
+OLLAMA_MODEL=llama2        # 3.8GB - Good balance
+# OLLAMA_MODEL=mistral     # 4.1GB - Fast and efficient  
+# OLLAMA_MODEL=codellama   # 3.8GB - Code-focused
+# OLLAMA_MODEL=llama2:13b  # 7.3GB - Better quality
 ```
 
-### Environment Setup by Platform
+## 📊 Deployment Comparison
 
-#### Vercel
+| Option | Backend | Frontend | LLM | Use Case |
+|--------|---------|----------|-----|----------|
+| `local` | Node.js | Python | OpenAI | Development |
+| `ollama` | Node.js | Python | Ollama/OpenAI | Development + Privacy |
+| `microservices` | Docker | Docker | OpenAI | Production |
+| `microservices-ollama` | Docker | Docker | External Ollama | Production + Privacy |
+
+## 🛠️ Management Commands
+
+### ChatKit Management
 ```bash
-# Set via CLI
-vercel env add OPENAI_API_KEY production
-vercel env add ALLOWED_ORIGINS production
-
-# Or via dashboard
-# Go to: https://vercel.com/dashboard
-# Select your project → Settings → Environment Variables
+./deploy.sh local              # Start local development
+./deploy.sh microservices      # Start microservices
+./deploy.sh stop               # Stop all services
+./deploy.sh status             # Check status
 ```
 
-#### Heroku
+### Ollama Management
 ```bash
-# Set via CLI
-heroku config:set OPENAI_API_KEY=sk-proj-your-key
-heroku config:set ALLOWED_ORIGINS=https://your-website.com
-
-# Or via dashboard
-# Go to: https://dashboard.heroku.com
-# Select your app → Settings → Config Vars
+cd ollama-setup
+./setup.sh start              # Start Ollama
+./setup.sh stop               # Stop Ollama
+./setup.sh status             # Check status
+./setup.sh pull               # Pull model
+./setup.sh list               # List models
 ```
 
-#### AWS
+## 🔍 Troubleshooting
+
+### ChatKit Issues
 ```bash
-# Set via EB CLI
-eb setenv OPENAI_API_KEY=sk-proj-your-key
-eb setenv ALLOWED_ORIGINS=https://your-website.com
+# Check if services are running
+./deploy.sh status
 
-# Or via AWS Console
-# Go to: Elastic Beanstalk → Your Environment → Configuration
+# Check logs
+docker compose logs -f
+
+# Restart services
+./deploy.sh stop
+./deploy.sh microservices
 ```
 
-## 📱 Frontend Integration
-
-### 1. Update Backend URL
-```javascript
-// In your website's JavaScript
-const CONFIG = {
-    backendUrl: 'https://your-backend.vercel.app', // Your deployed backend URL
-    sessionId: null
-};
-```
-
-### 2. Add Chat Widget
-```html
-<!-- Add to any website -->
-<script src="https://your-domain.com/chatkit-widget.js"></script>
-```
-
-### 3. Customize Widget
-```css
-/* Override default styles */
-.chatkit-toggle {
-    background: #your-brand-color !important;
-    bottom: 30px !important;
-    right: 30px !important;
-}
-```
-
-## 🔒 Security Checklist
-
-### Pre-Deployment
-- [ ] API key stored in environment variables
-- [ ] CORS origins configured for production
-- [ ] Rate limiting configured appropriately
-- [ ] Security headers enabled
-- [ ] HTTPS enforced
-
-### Post-Deployment
-- [ ] Test API endpoints
-- [ ] Verify CORS configuration
-- [ ] Test rate limiting
-- [ ] Check security headers
-- [ ] Monitor logs for errors
-
-## 🧪 Testing Deployment
-
-### 1. Health Check
+### Ollama Issues
 ```bash
-curl https://your-backend.vercel.app/health
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# Check Ollama logs
+cd ollama-setup
+docker compose logs ollama
+
+# Restart Ollama
+./setup.sh restart
 ```
 
-### 2. API Test
+### Connection Issues
 ```bash
-# Create session
-curl -X POST https://your-backend.vercel.app/api/create-session \
-  -H "Content-Type: application/json"
+# Test ChatKit backend
+curl http://localhost:3001/health
 
-# Send message
-curl -X POST https://your-backend.vercel.app/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"sessionId":"test123","message":"Hello"}'
+# Test frontend
+curl http://localhost:8080
+
+# Test Ollama
+curl http://localhost:11434/api/tags
 ```
 
-### 3. Frontend Test
+## 🎯 Production Deployment
+
+### With OpenAI
 ```bash
-# Test website with chat widget
-open https://your-website.com
+# Deploy microservices
+./deploy.sh microservices
+
+# Your chatbot is ready!
+# Access at: http://localhost:8080
 ```
 
-## 📊 Monitoring and Maintenance
-
-### 1. Log Monitoring
+### With Ollama (Private)
 ```bash
-# Vercel logs
-vercel logs
+# 1. Set up Ollama (separate server/container)
+cd ollama-setup
+./setup.sh start
 
-# Heroku logs
-heroku logs --tail
+# 2. Deploy ChatKit
+./deploy.sh microservices-ollama
 
-# AWS logs
-eb logs
+# Your private chatbot is ready!
+# Access at: http://localhost:8080
 ```
 
-### 2. Performance Monitoring
-- Monitor API response times
-- Track error rates
-- Monitor OpenAI API usage
-- Check rate limiting effectiveness
+## 🎉 Benefits
 
-### 3. Security Monitoring
-- Monitor security event logs
-- Check for suspicious activity
-- Verify CORS violations
-- Monitor rate limit violations
+### With OpenAI
+- ✅ **No Setup**: Works out of the box
+- ✅ **Latest Models**: Access to newest OpenAI models
+- ✅ **High Quality**: Excellent response quality
+- ✅ **Reliable**: Cloud-based reliability
 
-## 🔄 Updates and Maintenance
+### With Ollama
+- ✅ **Complete Privacy**: No data leaves your infrastructure
+- ✅ **No API Costs**: No per-token charges
+- ✅ **Offline Capable**: Works without internet
+- ✅ **Custom Models**: Use any compatible model
+- ✅ **Full Control**: Your infrastructure, your rules
 
-### 1. Code Updates
-```bash
-# Pull latest changes
-git pull origin main
+## 📚 Additional Resources
 
-# Deploy updates
-vercel --prod  # or heroku, eb deploy, etc.
-```
+- **[LOCAL_LLM_GUIDE.md](LOCAL_LLM_GUIDE.md)** - Detailed Ollama integration guide
+- **[EXTERNAL_OLLAMA_SETUP.md](EXTERNAL_OLLAMA_SETUP.md)** - External Ollama setup
+- **[ollama-setup/README.md](ollama-setup/README.md)** - Ollama setup project
 
-### 2. Environment Updates
-```bash
-# Update environment variables
-vercel env add NEW_VARIABLE production
-# or
-heroku config:set NEW_VARIABLE=value
-```
+---
 
-### 3. Dependencies Updates
-```bash
-# Update backend dependencies
-cd backend
-npm update
-npm audit fix
-
-# Deploy updates
-vercel --prod
-```
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-#### 1. CORS Errors
-```bash
-# Check ALLOWED_ORIGINS environment variable
-echo $ALLOWED_ORIGINS
-
-# Update if needed
-vercel env add ALLOWED_ORIGINS production
-```
-
-#### 2. API Key Errors
-```bash
-# Verify API key is set
-vercel env ls
-
-# Test API key
-curl -H "Authorization: Bearer $OPENAI_API_KEY" \
-  https://api.openai.com/v1/models
-```
-
-#### 3. Rate Limiting Issues
-```bash
-# Check rate limit configuration
-# Adjust MAX_REQUESTS_PER_MINUTE if needed
-vercel env add MAX_REQUESTS_PER_MINUTE production
-```
-
-### Debug Commands
-
-#### Vercel
-```bash
-# View logs
-vercel logs
-
-# Check environment
-vercel env ls
-
-# Debug locally
-vercel dev
-```
-
-#### Heroku
-```bash
-# View logs
-heroku logs --tail
-
-# Check config
-heroku config
-
-# Debug locally
-heroku local
-```
-
-#### AWS
-```bash
-# View logs
-eb logs
-
-# Check environment
-eb status
-
-# Debug locally
-eb local run
-```
-
-## 📈 Scaling Considerations
-
-### 1. High Traffic
-- Use Redis for session storage
-- Implement load balancing
-- Use CDN for static assets
-- Monitor OpenAI API limits
-
-### 2. Global Deployment
-- Deploy to multiple regions
-- Use edge functions
-- Implement geo-routing
-- Monitor latency
-
-### 3. Cost Optimization
-- Monitor OpenAI API usage
-- Implement caching
-- Use appropriate instance sizes
-- Set up billing alerts
-
-## 🎯 Production Best Practices
-
-### 1. Security
-- Regular security audits
-- API key rotation
-- Monitor for vulnerabilities
-- Keep dependencies updated
-
-### 2. Performance
-- Monitor response times
-- Optimize database queries
-- Use caching strategies
-- Implement CDN
-
-### 3. Reliability
-- Set up health checks
-- Implement circuit breakers
-- Use monitoring tools
-- Plan for disaster recovery
-
-## 📞 Support
-
-### Getting Help
-- Check logs for error messages
-- Review security guide
-- Test with curl commands
-- Monitor API usage
-
-### Resources
-- [Vercel Documentation](https://vercel.com/docs)
-- [Heroku Documentation](https://devcenter.heroku.com/)
-- [AWS Elastic Beanstalk](https://docs.aws.amazon.com/elasticbeanstalk/)
-- [OpenAI API Documentation](https://platform.openai.com/docs)
-
-## ✅ Deployment Checklist
-
-- [ ] Backend deployed successfully
-- [ ] Environment variables configured
-- [ ] CORS origins set correctly
-- [ ] API key working
-- [ ] Frontend integrated
-- [ ] Security features enabled
-- [ ] Monitoring set up
-- [ ] Testing completed
-- [ ] Documentation updated
-- [ ] Team notified
-
-## 🎉 Success!
-
-Your ChatKit integration is now deployed and ready for production use! The system provides:
-
-- ✅ **Secure AI Chat**: Powered by OpenAI GPT
-- ✅ **Easy Integration**: One line of code
-- ✅ **Production Ready**: Enterprise-grade security
-- ✅ **Scalable**: Handles high traffic
-- ✅ **Monitored**: Comprehensive logging
-- ✅ **Maintained**: Easy updates and fixes
-
-**Your AI-powered customer support is live! 🚀**
+**Ready to deploy!** Choose your preferred option and start building! 🚀

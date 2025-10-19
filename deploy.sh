@@ -262,7 +262,7 @@ start_docker() {
 
     # Function to start microservices deployment with external Ollama
     start_microservices_ollama() {
-        print_status "Starting microservices deployment with external Ollama..."
+        print_status "Starting microservices deployment with containerized Ollama..."
 
         # Check if Docker is running
         if ! command_exists docker; then
@@ -277,19 +277,19 @@ start_docker() {
             exit 1
         fi
 
-        # Check if external Ollama is running
-        print_status "Checking external Ollama connection..."
-        if ! curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
-            print_warning "External Ollama not detected at localhost:11434"
-            print_warning "Please ensure your Ollama container is running and accessible"
-            print_warning "You can set OLLAMA_BASE_URL environment variable if using different URL"
+        # Check if Ollama container is running
+        print_status "Checking Ollama container..."
+        if ! docker ps | grep -q "ollama-server"; then
+            print_warning "Ollama container not detected!"
+            print_warning "Please start Ollama container first:"
+            print_warning "  cd ollama-setup && ./setup.sh start"
             read -p "Continue anyway? (y/N): " continue_anyway
             if [[ ! $continue_anyway =~ ^[Yy]$ ]]; then
                 print_error "Deployment cancelled. Please start your Ollama container first."
                 exit 1
             fi
         else
-            print_success "External Ollama detected and accessible"
+            print_success "Ollama container detected and running"
         fi
 
         # Kill any existing containers
@@ -298,25 +298,17 @@ start_docker() {
         docker compose -f docker-compose.microservices.yml down 2>/dev/null || true
         docker compose -f docker-compose.microservices-ollama.yml down 2>/dev/null || true
 
-        # Create environment file for external Ollama
-        print_status "Creating environment file for external Ollama..."
-        cat > .env.ollama-microservices << EOF
-OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-OLLAMA_MODEL=${OLLAMA_MODEL:-llama2}
-OLLAMA_API_KEY=ollama
-PORT=3001
-NODE_ENV=production
-ALLOWED_ORIGINS=http://localhost:8080,http://localhost:3000
-RATE_LIMIT_REQUESTS_PER_MINUTE=60
-RATE_LIMIT_REQUESTS_PER_HOUR=1000
-RATE_LIMIT_BURST=10
-SESSION_SECRET=your-super-secret-session-key-change-this-in-production
-API_KEY_HASH_SALT=your-salt-for-api-key-hashing-change-this-in-production
-OPENAI_API_KEY=${OPENAI_API_KEY:-}
-EOF
+        # Connect Ollama to the chatbot network if not already connected
+        print_status "Setting up container networking..."
+        if ! docker network ls | grep -q "websitechatbot_chatbot-network"; then
+            docker network create websitechatbot_chatbot-network 2>/dev/null || true
+        fi
+        
+        # Connect Ollama container to the network
+        docker network connect websitechatbot_chatbot-network ollama-server 2>/dev/null || true
 
         # Build and start microservices
-        print_status "Building and starting microservices with external Ollama..."
+        print_status "Building and starting microservices with containerized Ollama..."
         docker compose -f docker-compose.microservices-ollama.yml up --build -d
 
         # Wait for services to start
@@ -343,24 +335,22 @@ EOF
         # Create a simple test page
         create_test_page
 
-        print_success "Microservices deployment with external Ollama complete!"
+        print_success "Microservices deployment with containerized Ollama complete!"
         print_status "Access your services at:"
         echo "  🌐 Sample Website: http://localhost:8080"
         echo "  🔧 ChatBot Backend: http://localhost:3001"
-        echo "  🤖 External Ollama: ${OLLAMA_BASE_URL:-http://localhost:11434}"
+        echo "  🤖 Containerized Ollama: http://localhost:11434"
         echo "  📱 Widget Script: http://localhost:8080/chatkit-widget.js"
         echo "  🧪 Test Page: http://localhost:8080/test.html"
         echo ""
         print_status "Architecture:"
         echo "  📦 Sample Website Container (Port 8080)"
         echo "  🤖 ChatBot Backend Container (Port 3001)"
-        echo "  🧠 External Ollama Container (Port 11434) - Separate project"
+        echo "  🧠 Containerized Ollama (Port 11434) - Separate container"
         echo "  🌐 All containers communicate via Docker network"
         echo ""
-        print_status "Prerequisites:"
-        echo "  ✅ External Ollama container must be running"
-        echo "  ✅ Ollama accessible at: ${OLLAMA_BASE_URL:-http://localhost:11434}"
-        echo "  ✅ Model '${OLLAMA_MODEL:-llama2}' must be available in Ollama"
+        print_status "Container Status:"
+        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
         echo ""
         print_status "To stop: docker compose -f docker-compose.microservices-ollama.yml down"
         print_status "To view logs: docker compose -f docker-compose.microservices-ollama.yml logs -f"

@@ -1,13 +1,14 @@
 services:
-  # ChatBot Backend with External Ollama Support
+  # ChatBot Backend with Containerized Ollama Support
   chatbot-backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.ollama
+      dockerfile: Dockerfile
     container_name: chatbot-backend-ollama
+    command: ["node", "server-ollama.js"]
     environment:
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama2}
+      - OLLAMA_BASE_URL=http://ollama-server:11434
+      - OLLAMA_MODEL=llama2:latest
       - OLLAMA_API_KEY=ollama
       - PORT=3001
       - NODE_ENV=production
@@ -22,10 +23,10 @@ services:
       - "3001:3001"
     networks:
       - chatbot-network
-    # No depends_on - connects to external Ollama service
+    # No depends_on - connects to external Ollama container
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -48,14 +49,12 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 20s
 
-# No volumes needed - using external Ollama service
-
 networks:
   chatbot-network:
-    driver: bridge
+    external: true

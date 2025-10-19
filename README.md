@@ -1,10 +1,10 @@
 # Website Chatbot with OpenAI ChatKit
 
-A complete, production-ready AI chatbot solution that can be easily integrated into any website with just one line of code.
+A complete, production-ready AI chatbot solution that can be easily integrated into any website with just one line of code. Supports both OpenAI and local Ollama LLMs with full containerization.
 
 ## 🚀 Quick Start
 
-### Option 1: One-Command Deployment (Recommended)
+### Option 1: OpenAI-Only Deployment (Recommended for beginners)
 ```bash
 git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot
@@ -15,7 +15,7 @@ cp env.example .env
 ./deploy.sh
 ```
 
-### Option 2: Microservices Deployment (Production)
+### Option 2: Microservices with OpenAI (Production)
 ```bash
 git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot
@@ -26,19 +26,21 @@ cp env.example .env
 ./deploy.sh microservices
 ```
 
-### Option 2b: Microservices with External Ollama (Private LLM)
+### Option 3: Microservices with Containerized Ollama (Private LLM)
 ```bash
 git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot
 
-# First, set up external Ollama (separate project)
-# See EXTERNAL_OLLAMA_SETUP.md for details
+# Step 1: Set up Ollama container (separate project)
+cd ollama-setup
+./setup.sh start
+cd ..
 
-# Deploy ChatKit with external Ollama
+# Step 2: Deploy ChatKit with containerized Ollama
 ./deploy.sh microservices-ollama
 ```
 
-### Option 3: With Optional Local LLM Support
+### Option 4: Local Development with Ollama Support
 ```bash
 git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot

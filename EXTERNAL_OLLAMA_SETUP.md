@@ -1,8 +1,8 @@
-# 🤖 External Ollama Setup Guide
+# 🤖 Containerized Ollama Setup Guide
 
 ## Overview
 
-This guide shows you how to set up Ollama as a separate containerized service that ChatKit can connect to. This approach keeps Ollama completely separate from the ChatKit project.
+This guide shows you how to set up Ollama as a separate containerized service that ChatKit can connect to. This approach keeps Ollama completely separate from the ChatKit project and ensures maximum pluggability.
 
 ## 🚀 Quick Setup
 

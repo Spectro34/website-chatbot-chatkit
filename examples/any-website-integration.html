@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Any Website - ChatKit Integration Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; text-align: center; }
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .highlight { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Any Website Integration Demo</h1>
+        
+        <div class="demo-section">
+            <h2>📝 Step 1: Add the Widget Script</h2>
+            <p>Include the ChatKit widget in your HTML head or before closing body tag:</p>
+            <div class="code-block">
+&lt;script src="<span class="highlight">http://localhost:8080/chatkit-widget.js</span>"&gt;&lt;/script&gt;
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>⚙️ Step 2: Initialize the ChatBot</h2>
+            <p>Configure the widget to connect to your ChatBot backend:</p>
+            <div class="code-block">
+&lt;script&gt;
+    ChatKit.init({
+        <span class="highlight">backendUrl: 'http://localhost:3001'</span>,  // Your ChatBot backend
+        widgetTitle: 'AI Assistant',
+        welcomeMessage: 'Hello! How can I help you?',
+        position: 'bottom-right',
+        theme: 'light',
+        primaryColor: '#3498db'
+    });
+&lt;/script&gt;
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔧 Step 3: Connect to Your Ollama</h2>
+            <p>Deploy your ChatBot backend pointing to your Ollama instance:</p>
+            <div class="code-block">
+docker run -d --name my-chatbot \
+  -p 3001:3001 \
+  -e <span class="highlight">OLLAMA_BASE_URL=http://your-ollama-server:11434</span> \
+  -e <span class="highlight">OLLAMA_MODEL=your-model-name</span> \
+  -e ALLOWED_ORIGINS=https://yourwebsite.com \
+  websitechatbot-chatbot-backend \
+  node server-ollama.js
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎯 That's It!</h2>
+            <p>Your website now has a fully functional AI chatbot that:</p>
+            <ul>
+                <li>✅ Uses your local Ollama model (private & secure)</li>
+                <li>✅ Works on any website (WordPress, React, Vue, etc.)</li>
+                <li>✅ Automatically falls back to OpenAI if Ollama is down</li>
+                <li>✅ Fully customizable appearance and behavior</li>
+                <li>✅ No server-side code needed on your website</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Advanced Configuration</h2>
+            <p>For production deployment, you can customize everything:</p>
+            <div class="code-block">
+ChatKit.init({
+    backendUrl: 'https://api.yourdomain.com',
+    widgetTitle: 'Customer Support',
+    welcomeMessage: 'Hi! I\'m here to help with your questions.',
+    position: 'bottom-left',
+    theme: 'dark',
+    primaryColor: '#e74c3c',
+    placeholderText: 'Ask me anything...',
+    toggleButtonText: '🤖',
+    // Custom styling
+    customCSS: `
+        .chatkit-widget { border-radius: 15px; }
+        .chatkit-messages { font-size: 14px; }
+    `
+});
+            </div>
+        </div>
+    </div>
+
+    <!-- ChatKit Widget Integration -->
+    <script src="http://localhost:8080/chatkit-widget.js"></script>
+    <script>
+        // Initialize ChatKit for this demo
+        ChatKit.init({
+            backendUrl: 'http://localhost:3001',
+            widgetTitle: 'Demo Assistant',
+            welcomeMessage: 'Hello! This is a demo of ChatKit integration. Try asking me anything!',
+            position: 'bottom-right',
+            theme: 'light',
+            primaryColor: '#3498db'
+        });
+    </script>
+</body>
+</html>

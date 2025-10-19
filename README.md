@@ -14,7 +14,33 @@ git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot
 ```
 
-### 2. Deploy with Containerized Ollama (Recommended)
+### 2. Configure Environment Variables
+```bash
+# Copy environment template
+cp env.example .env
+
+# Edit configuration
+nano .env
+```
+
+**Required Configuration:**
+```bash
+# OpenAI API Key (for fallback)
+OPENAI_API_KEY=sk-proj-your-openai-api-key-here
+
+# Server Configuration
+NODE_ENV=production
+PORT=3001
+
+# Security Configuration
+ALLOWED_ORIGINS=http://localhost:8080,https://yourdomain.com
+
+# Rate Limiting
+MAX_REQUESTS_PER_MINUTE=60
+MAX_REQUESTS_PER_HOUR=1000
+```
+
+### 3. Deploy with Containerized Ollama (Recommended)
 ```bash
 # Start Ollama container
 cd ollama-setup
@@ -25,7 +51,7 @@ cd ..
 ./deploy.sh microservices-ollama
 ```
 
-### 3. Access Your ChatBot
+### 4. Access Your ChatBot
 - **Website**: http://localhost:8080
 - **API**: http://localhost:3001
 - **Integration Example**: http://localhost:8080/examples/any-website-integration.html
@@ -44,6 +70,91 @@ cd ..
 │   (Port 8080)   │◄──►│   (Port 3001)   │◄──►│   (Port 11434)  │
 │   Nginx + UI    │    │   Node.js API   │    │   LLM Engine    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+#### For Containerized Deployment
+```bash
+# Copy environment template
+cp env.example .env
+
+# Edit with your settings
+nano .env
+```
+
+**Required Variables:**
+```bash
+# OpenAI API Key (for fallback when Ollama is unavailable)
+OPENAI_API_KEY=sk-proj-your-openai-api-key-here
+
+# Server Configuration
+NODE_ENV=production
+PORT=3001
+
+# Security Configuration
+ALLOWED_ORIGINS=http://localhost:8080,https://yourdomain.com
+
+# Rate Limiting
+MAX_REQUESTS_PER_MINUTE=60
+MAX_REQUESTS_PER_HOUR=1000
+
+# Session Configuration
+SESSION_MAX_AGE_HOURS=24
+```
+
+#### For Ollama Setup
+```bash
+# Navigate to Ollama setup
+cd ollama-setup
+
+# Copy environment template
+cp env.example .env
+
+# Edit Ollama configuration
+nano .env
+```
+
+**Ollama Variables:**
+```bash
+# Ollama Model Configuration
+OLLAMA_MODEL=llama2        # Default model
+# OLLAMA_MODEL=mistral     # Alternative model
+# OLLAMA_MODEL=codellama   # Code-focused model
+```
+
+### Container Configuration
+
+#### Docker Compose Environment
+The containers automatically use environment variables from `.env`:
+
+```yaml
+# docker-compose.microservices-ollama.yml
+services:
+  chatbot-backend:
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OLLAMA_BASE_URL=http://ollama-server:11434
+      - OLLAMA_MODEL=llama2:latest
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+```
+
+#### Security Best Practices
+```bash
+# Never commit .env files to git
+echo ".env" >> .gitignore
+
+# Use strong, unique API keys
+OPENAI_API_KEY=sk-proj-1234567890abcdef...
+
+# Restrict allowed origins
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# Set appropriate rate limits
+MAX_REQUESTS_PER_MINUTE=60
+MAX_REQUESTS_PER_HOUR=1000
 ```
 
 ## 🔧 Deployment Options
@@ -119,6 +230,7 @@ cd ..
 
 ## 📚 Documentation
 
+- **[Configuration Guide](CONFIGURATION_GUIDE.md)** - Complete setup and configuration
 - **[Architecture Guide](ARCHITECTURE_DOCUMENTATION.md)** - Technical details
 - **[Security Guide](SECURITY_GUIDE.md)** - Security features
 - **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment

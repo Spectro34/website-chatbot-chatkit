@@ -23,6 +23,10 @@ Complete guide for deploying ChatKit in various environments.
 git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot
 
+# Configure environment variables
+cp env.example .env
+nano .env  # Add your OpenAI API key
+
 # Start with Ollama support
 ./deploy.sh ollama
 
@@ -163,7 +167,104 @@ az aks create --resource-group myResourceGroup --name chatkit-cluster --node-cou
 kubectl apply -f kubernetes-deployment.yaml
 ```
 
-## 🔧 Configuration
+## ⚙️ Configuration
+
+### Step-by-Step Configuration
+
+#### 1. Main Project Configuration
+```bash
+# Copy environment template
+cp env.example .env
+
+# Edit configuration
+nano .env
+```
+
+**Required Configuration:**
+```bash
+# OpenAI API Key (REQUIRED for fallback)
+OPENAI_API_KEY=sk-proj-your-openai-api-key-here
+
+# Server Configuration
+NODE_ENV=production
+PORT=3001
+
+# Security Configuration
+ALLOWED_ORIGINS=http://localhost:8080,https://yourdomain.com
+
+# Rate Limiting
+MAX_REQUESTS_PER_MINUTE=60
+MAX_REQUESTS_PER_HOUR=1000
+
+# Session Configuration
+SESSION_MAX_AGE_HOURS=24
+```
+
+#### 2. Ollama Configuration
+```bash
+# Navigate to Ollama setup
+cd ollama-setup
+
+# Copy environment template
+cp env.example .env
+
+# Edit Ollama configuration
+nano .env
+```
+
+**Ollama Configuration:**
+```bash
+# Ollama Model Configuration
+OLLAMA_MODEL=llama2        # Default model (3.8GB)
+# OLLAMA_MODEL=mistral     # Alternative model (4.1GB)
+# OLLAMA_MODEL=codellama   # Code-focused model (3.8GB)
+# OLLAMA_MODEL=llama2:13b  # Higher quality (7.3GB, needs 16GB+ RAM)
+```
+
+#### 3. Container Environment Variables
+
+The containers automatically use environment variables from your `.env` file:
+
+```yaml
+# docker-compose.microservices-ollama.yml
+services:
+  chatbot-backend:
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OLLAMA_BASE_URL=http://ollama-server:11434
+      - OLLAMA_MODEL=llama2:latest
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - PORT=${PORT:-3001}
+      - NODE_ENV=${NODE_ENV:-production}
+```
+
+#### 4. Security Configuration
+
+**API Key Security:**
+```bash
+# Never commit .env files to git
+echo ".env" >> .gitignore
+echo "ollama-setup/.env" >> .gitignore
+
+# Use strong, unique API keys
+OPENAI_API_KEY=sk-proj-1234567890abcdef...
+
+# Restrict allowed origins
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+```
+
+**Rate Limiting:**
+```bash
+# Set appropriate rate limits
+MAX_REQUESTS_PER_MINUTE=60
+MAX_REQUESTS_PER_HOUR=1000
+```
+
+**Session Security:**
+```bash
+# Session configuration
+SESSION_MAX_AGE_HOURS=24
+```
 
 ### Environment Variables
 
@@ -174,7 +275,7 @@ PORT=3001
 NODE_ENV=production
 
 # CORS Configuration
-ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+ALLOWED_ORIGINS=http://localhost:8080,https://yourdomain.com
 
 # Rate Limiting
 RATE_LIMIT_REQUESTS_PER_MINUTE=60

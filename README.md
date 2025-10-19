@@ -26,7 +26,21 @@ cp env.example .env
 ./deploy.sh microservices
 ```
 
-### Option 3: Local Development
+### Option 3: With Optional Local LLM Support
+```bash
+git clone https://github.com/yourusername/websitechatbot.git
+cd websitechatbot
+
+# Deploy with optional Ollama support (falls back to OpenAI if not available)
+./deploy.sh ollama
+
+# Optional: To use local LLM instead of OpenAI
+# brew install ollama  # macOS
+# ollama serve
+# ollama pull llama2
+```
+
+### Option 4: Local Development
 ```bash
 git clone https://github.com/yourusername/websitechatbot.git
 cd websitechatbot

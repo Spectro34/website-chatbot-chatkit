@@ -201,8 +201,67 @@ start_docker() {
     print_status "To view logs: docker compose logs -f"
 }
 
-# Function to start microservices deployment
-start_microservices() {
+    # Function to start Ollama deployment (optional)
+    start_ollama() {
+        print_status "Starting ChatKit with optional Ollama support..."
+
+        # Kill any existing processes
+        kill_port 3001
+        kill_port 8080
+
+        # Start ChatKit backend with Ollama support (falls back to OpenAI)
+        print_status "Starting ChatKit backend with Ollama support..."
+        (cd backend && npm run start:ollama) &
+        BACKEND_PID=$!
+        sleep 5
+
+        # Check if backend started
+        if curl -s http://localhost:3001/health >/dev/null; then
+            print_success "Backend is running on http://localhost:3001"
+        else
+            print_error "Backend failed to start!"
+            kill $BACKEND_PID 2>/dev/null
+            exit 1
+        fi
+
+        # Start frontend
+        print_status "Starting frontend server on port 8080..."
+        (cd sample-website && python3 -m http.server 8080) &
+        FRONTEND_PID=$!
+        sleep 2
+
+        # Check if frontend started
+        if curl -s http://localhost:8080 >/dev/null; then
+            print_success "Frontend is running on http://localhost:8080"
+        else
+            print_error "Frontend failed to start!"
+            kill $BACKEND_PID $FRONTEND_PID 2>/dev/null
+            exit 1
+        fi
+
+        # Create a simple test page
+        create_test_page
+
+        print_success "ChatKit with Ollama support complete!"
+        print_status "Access your chatbot at:"
+        echo "  🌐 Main Website: http://localhost:8080"
+        echo "  🔧 Backend API: http://localhost:3001"
+        echo "  📱 Widget Script: http://localhost:8080/chatkit-widget.js"
+        echo "  🧪 Test Page: http://localhost:8080/test.html"
+        echo ""
+        print_status "🤖 Ollama Integration:"
+        echo "  - If Ollama is running: Uses local LLM (private)"
+        echo "  - If Ollama not available: Falls back to OpenAI"
+        echo "  - To use Ollama: 'brew install ollama && ollama serve && ollama pull llama2'"
+        echo ""
+        print_status "Press Ctrl+C to stop all services"
+
+        # Wait for user to stop
+        wait
+    }
+
+    # Function to start microservices deployment
+    start_microservices() {
     print_status "Starting microservices deployment..."
     
     # Check if Docker is running
@@ -468,6 +527,7 @@ show_help() {
     echo "  local         Start local development environment"
     echo "  docker        Start Docker containerized deployment"
     echo "  microservices Start microservices deployment (separate containers)"
+    echo "  ollama        Start with Ollama support (optional local LLM)"
     echo "  stop          Stop all running services"
     echo "  status        Check status of running services"
     echo "  help          Show this help message"
@@ -476,6 +536,7 @@ show_help() {
     echo "  ./deploy.sh local         # Start local development"
     echo "  ./deploy.sh docker        # Start Docker deployment"
     echo "  ./deploy.sh microservices # Start microservices deployment"
+    echo "  ./deploy.sh ollama        # Start Ollama deployment"
     echo "  ./deploy.sh stop          # Stop all services"
     echo "  ./deploy.sh status        # Check service status"
     echo ""
@@ -483,6 +544,7 @@ show_help() {
     echo "  local         - Fast development, both services in one process"
     echo "  docker        - Single container with both services"
     echo "  microservices - Separate containers (production-like)"
+    echo "  ollama        - Optional local LLM support (falls back to OpenAI if not available)"
 }
 
 # Function to stop services
@@ -543,53 +605,62 @@ case "${1:-}" in
         check_environment
         start_docker
         ;;
-    "microservices")
-        check_environment
-        start_microservices
-        ;;
-    "stop")
-        stop_services
-        ;;
-    "status")
-        check_status
-        ;;
-    "help"|"-h"|"--help")
-        show_help
-        ;;
-    "")
-        print_status "ChatKit Deployment Script"
-        echo ""
-        echo "Choose deployment method:"
-        echo "1) Local development (faster, for development)"
-        echo "2) Docker deployment (single container)"
-        echo "3) Microservices deployment (separate containers)"
-        echo "4) Show help"
-        echo ""
-        read -p "Enter your choice (1-4): " choice
-        
-        case $choice in
-            1)
-                check_environment
-                install_dependencies
-                start_local
-                ;;
-            2)
-                check_environment
-                start_docker
-                ;;
-            3)
-                check_environment
-                start_microservices
-                ;;
-            4)
-                show_help
-                ;;
-            *)
-                print_error "Invalid choice!"
-                exit 1
-                ;;
-        esac
-        ;;
+        "microservices")
+            check_environment
+            start_microservices
+            ;;
+        "ollama")
+            check_environment
+            start_ollama
+            ;;
+        "stop")
+            stop_services
+            ;;
+        "status")
+            check_status
+            ;;
+        "help"|"-h"|"--help")
+            show_help
+            ;;
+        "")
+            print_status "ChatKit Deployment Script"
+            echo ""
+            echo "Choose deployment method:"
+            echo "1) Local development (faster, for development)"
+            echo "2) Docker deployment (single container)"
+            echo "3) Microservices deployment (separate containers)"
+            echo "4) Ollama deployment (local LLM, private)"
+            echo "5) Show help"
+            echo ""
+            read -p "Enter your choice (1-5): " choice
+
+            case $choice in
+                1)
+                    check_environment
+                    install_dependencies
+                    start_local
+                    ;;
+                2)
+                    check_environment
+                    start_docker
+                    ;;
+                3)
+                    check_environment
+                    start_microservices
+                    ;;
+                4)
+                    check_environment
+                    start_ollama
+                    ;;
+                5)
+                    show_help
+                    ;;
+                *)
+                    print_error "Invalid choice!"
+                    exit 1
+                    ;;
+            esac
+            ;;
     *)
         print_error "Unknown option: $1"
         show_help

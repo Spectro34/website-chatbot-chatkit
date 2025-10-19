@@ -58,3 +58,4 @@ services:
 networks:
   chatbot-network:
     external: true
+    name: websitechatbot_chatbot-network
